@@ -4,7 +4,7 @@
   "main": "src/index.ts",
   "repository": "https://github.com/TetieWasTaken/babble",
   "author": "TetieWasTaken",
-  "license": "unlicense",
+  "license": "Unlicense",
   "private": false,
   "devDependencies": {
     "typescript": "^5.8.3"
