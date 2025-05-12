@@ -1,15 +1,20 @@
 {
-  "name": "babble",
-  "version": "1.0.0",
-  "main": "src/index.ts",
-  "repository": "https://github.com/TetieWasTaken/babble",
-  "scripts": {
-    "build": "tsc"
-  },
-  "author": "TetieWasTaken",
-  "license": "Unlicense",
-  "private": false,
-  "devDependencies": {
-    "typescript": "^5.8.3"
-  }
+	"name": "babble",
+	"type": "module",
+	"version": "1.0.0",
+	"main": "src/index.ts",
+	"repository": "https://github.com/TetieWasTaken/babble",
+	"scripts": {
+		"build": "tsc",
+		"lint": "xo .",
+		"format": "prettier ."
+	},
+	"author": "TetieWasTaken",
+	"license": "Unlicense",
+	"private": false,
+	"devDependencies": {
+		"prettier": "^3.5.3",
+		"typescript": "^5.8.3",
+		"xo": "^0.60.0"
+	}
 }
