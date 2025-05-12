@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "main": "src/index.ts",
   "repository": "https://github.com/TetieWasTaken/babble",
+  "scripts": {
+    "build": "tsc"
+  },
   "author": "TetieWasTaken",
   "license": "Unlicense",
   "private": false,
