@@ -5,5 +5,8 @@
   "repository": "https://github.com/TetieWasTaken/babble",
   "author": "TetieWasTaken",
   "license": "unlicense",
-  "private": false
+  "private": false,
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
 }
