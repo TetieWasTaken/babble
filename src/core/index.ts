@@ -29,29 +29,62 @@ async function _write(data: Record<string, any>): Promise<void> {
 	}
 }
 
-export async function add(key: string, doc: object): Promise<Record<string, any>> {
+function _get(obj: any, pathParts: string[]): any {
+	return pathParts.reduce((acc, key) => (acc != null && typeof acc === "object" ? acc[key] : undefined), obj);
+}
+
+function _set(obj: any, pathParts: string[], value: any): void {
+	const lastKey = pathParts.pop()!;
+	const parent = pathParts.reduce((acc, key) => {
+		if (acc[key] == null || typeof acc[key] !== "object") {
+			acc[key] = {};
+		}
+		return acc[key];
+	}, obj);
+	parent[lastKey] = value;
+}
+
+function _delete(obj: any, pathParts: string[]): boolean {
+	const lastKey = pathParts.pop()!;
+	const parent = pathParts.reduce((acc, key) => (acc != null && typeof acc === "object" ? acc[key] : undefined), obj);
+	if (parent && Object.prototype.hasOwnProperty.call(parent, lastKey)) {
+		delete parent[lastKey];
+		return true;
+	}
+	return false;
+}
+
+export async function add(path: string, doc: any) {
 	const db = await _read();
-	db[key] = doc;
+	const parts = path.split("/").filter(Boolean);
+	_set(db, parts, doc);
 	await _write(db);
 	return db;
 }
 
-export async function fetch(key: string): Promise<any> {
+export async function fetch(path: string) {
 	const db = await _read();
-	return db[key];
+	const parts = path.split("/").filter(Boolean);
+	return _get(db, parts);
 }
 
-export async function modify(key: string, patch: object): Promise<Record<string, any>> {
+export async function modify(path: string, patch: any) {
 	const db = await _read();
-	const existing = (db[key] as Record<string, any>) || {};
-	db[key] = { ...existing, ...patch };
+	const parts = path.split("/").filter(Boolean);
+	const existing = _get(db, parts) || {};
+	if (typeof existing !== "object") {
+		throw new Error("Can only patch objects");
+	}
+	const merged = { ...existing, ...patch };
+	_set(db, parts, merged);
 	await _write(db);
 	return db;
 }
 
-export async function remove(key: string): Promise<Record<string, any>> {
+export async function remove(path: string) {
 	const db = await _read();
-	delete db[key];
+	const parts = path.split("/").filter(Boolean);
+	_delete(db, parts);
 	await _write(db);
 	return db;
 }
