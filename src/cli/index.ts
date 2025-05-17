@@ -1,24 +1,16 @@
-import inquirer from 'inquirer';
+import { select, editor, input, Separator } from '@inquirer/prompts';
 import fetch from 'node-fetch';
+import { Method } from '../server/routes.js';
 
-type ActionAnswer = {
-	action: 'add' | 'fetch' | 'modify' | 'remove' | 'exit';
+type Action = {
+	action: 'add' | 'fetch' | 'modify' | 'remove';
 };
 
-type KeyAnswer = {
-	key: string;
-};
-
-type JsonAnswer = {
-	json: string;
-};
-
-const methodMap: Record<ActionAnswer['action'], 'GET' | 'POST' | 'PATCH' | 'DELETE'> = {
-	add: 'POST',
-	fetch: 'GET',
-	modify: 'PATCH',
-	remove: 'DELETE',
-	exit: 'GET', // Unused
+const methodMap: Record<Action['action'], Method> = {
+	add: Method.POST,
+	fetch: Method.GET,
+	modify: Method.PATCH,
+	remove: Method.DELETE,
 };
 
 export async function startCli() {
@@ -26,11 +18,16 @@ export async function startCli() {
 
 	/* eslint-disable no-await-in-loop */
 	while (!exit) {
-		const { action } = await inquirer.prompt<ActionAnswer>({
-			type: 'list',
-			name: 'action',
+		const action = await select({
 			message: 'Choose an action:',
-			choices: ['add', 'fetch', 'modify', 'remove', 'exit'],
+			choices: [
+				{ name: 'add', value: 'add' },
+				{ name: 'fetch', value: 'fetch' },
+				{ name: 'modify', value: 'modify' },
+				{ name: 'delete', value: 'delete' },
+				new Separator(),
+				{ name: 'exit', value: 'exit' },
+			],
 		});
 
 		if (action === 'exit') {
@@ -38,17 +35,11 @@ export async function startCli() {
 			break;
 		}
 
-		const { key } = await inquirer.prompt<KeyAnswer>({
-			type: 'input',
-			name: 'key',
-			message: 'Document key:',
-		});
+		const key = await input({ message: 'Document key:' });
 
 		let body: Record<string, unknown> | undefined;
 		if (action === 'add' || action === 'modify') {
-			const { json } = await inquirer.prompt<JsonAnswer>({
-				type: 'editor',
-				name: 'json',
+			const json = await editor({
 				message: 'Enter document as JSON:',
 			});
 

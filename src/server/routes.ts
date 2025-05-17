@@ -1,7 +1,7 @@
 import { type FastifyRequest, type FastifyReply } from 'fastify';
 import { add, fetch, modify, remove } from '../linker/index.js';
 
-enum Method {
+export enum Method {
 	GET = 'GET',
 	HEAD = 'HEAD',
 	TRACE = 'TRACE',
