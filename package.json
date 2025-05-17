@@ -6,6 +6,8 @@
 	"repository": "https://github.com/TetieWasTaken/babble",
 	"scripts": {
 		"build": "tsc",
+		"start": "node dist/linker/index.js",
+		"dev": "yarn run build && yarn run start",
 		"lint": "xo .",
 		"format": "prettier ."
 	},
@@ -16,5 +18,11 @@
 		"prettier": "^3.5.3",
 		"typescript": "^5.8.3",
 		"xo": "^0.60.0"
+	},
+	"dependencies": {
+		"fastify": "^5.3.2",
+		"inquirer": "^12.6.1",
+		"node-fetch": "^3.3.2",
+		"pino": "^9.6.0"
 	}
 }
