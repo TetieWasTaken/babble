@@ -30,6 +30,7 @@ export async function startCLI() {
 				name: "json",
 				message: "Enter document as JSON:",
 			});
+
 			try {
 				body = JSON.parse(json);
 			} catch {

@@ -9,7 +9,7 @@
 		"start": "node dist/linker/index.js",
 		"dev": "yarn run build && yarn run start",
 		"lint": "xo .",
-		"format": "prettier ."
+		"format": "prettier . --write"
 	},
 	"author": "TetieWasTaken",
 	"license": "Unlicense",
