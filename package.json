@@ -15,6 +15,7 @@
 	"license": "Unlicense",
 	"private": false,
 	"devDependencies": {
+		"@types/node": "^22.15.18",
 		"prettier": "^3.5.3",
 		"typescript": "^5.8.3",
 		"xo": "^0.60.0"
