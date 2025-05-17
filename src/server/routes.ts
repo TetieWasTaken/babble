@@ -21,9 +21,9 @@ interface Route {
 const routes: Route[] = [
 	{
 		method: Method.POST,
-		url: "/server/add/:key",
+		url: "/server/add/*",
 		async handler(request, reply) {
-			const { key } = request.params;
+			const key = request.params["*"] as string;
 			const doc = request.body;
 			logger.warn(doc);
 			await add(key, doc);
@@ -32,7 +32,7 @@ const routes: Route[] = [
 	},
 	{
 		method: Method.GET,
-		url: "/server/fetch/:key",
+		url: "/server/fetch/*",
 		async handler(request, reply) {
 			const { key } = request.params;
 			const result = await fetch(key);
@@ -41,7 +41,7 @@ const routes: Route[] = [
 	},
 	{
 		method: Method.PATCH,
-		url: "/server/modify/:key",
+		url: "/server/modify/*",
 		async handler(request, reply) {
 			const { key } = request.params;
 			const patch = request.body;
@@ -51,7 +51,7 @@ const routes: Route[] = [
 	},
 	{
 		method: Method.DELETE,
-		url: "/server/remove/:key",
+		url: "/server/remove/*",
 		async handler(request, reply) {
 			const { key } = request.params;
 			await remove(key);
