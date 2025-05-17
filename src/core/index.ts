@@ -5,6 +5,7 @@
  */
 
 import { promises as fs } from "node:fs";
+import writeFileAtomic from "write-file-atomic";
 import path from "node:path";
 import logger from "../linker/logger.js";
 
@@ -31,7 +32,7 @@ async function _read(): Promise<Record<string, any>> {
 async function _write(data: Record<string, any>): Promise<void> {
 	try {
 		const json = JSON.stringify(data, null, 2);
-		await fs.writeFile(dataFile, json, "utf-8");
+		await writeFileAtomic(dataFile, json, "utf-8");
 	} catch (err) {
 		logger.error("Failed to write DB:", err);
 	}

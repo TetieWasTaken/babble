@@ -24,6 +24,7 @@
 		"fastify": "^5.3.2",
 		"inquirer": "^12.6.1",
 		"node-fetch": "^3.3.2",
-		"pino": "^9.6.0"
+		"pino": "^9.6.0",
+		"write-file-atomic": "^6.0.0"
 	}
 }
