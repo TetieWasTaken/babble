@@ -1,61 +1,62 @@
-import { add, fetch, modify, remove } from "../linker/index.js";
-import logger from "../linker/logger.js";
+import { type FastifyRequest, type FastifyReply } from 'fastify';
+import { add, fetch, modify, remove } from '../linker/index.js';
 
 enum Method {
-	GET = "GET",
-	HEAD = "HEAD",
-	TRACE = "TRACE",
-	DELETE = "DELETE",
-	OPTIONS = "OPTIONS",
-	PATCH = "PATCH",
-	PUT = "PUT",
-	POST = "POST",
+	GET = 'GET',
+	HEAD = 'HEAD',
+	TRACE = 'TRACE',
+	DELETE = 'DELETE',
+	OPTIONS = 'OPTIONS',
+	PATCH = 'PATCH',
+	PUT = 'PUT',
+	POST = 'POST',
 }
 
-interface Route {
+type Wildcard = { Params: { '*': string } };
+
+type Route = {
 	method: Method;
 	url: string;
-	handler: (request: any, reply: any) => void;
-}
+	handler: (request: FastifyRequest<Wildcard>, reply: FastifyReply) => void;
+};
 
 const routes: Route[] = [
 	{
 		method: Method.POST,
-		url: "/server/add/*",
+		url: '/server/add/*',
 		async handler(request, reply) {
-			const key = request.params["*"] as string;
-			const doc = request.body;
-			logger.warn(doc);
-			await add(key, doc);
-			reply.send({ status: "ok", key, doc });
+			const key = request.params['*'];
+			const document = request.body as Record<string, unknown>;
+			await add(key, document);
+			await reply.send({ status: 'ok', key, doc: document });
 		},
 	},
 	{
 		method: Method.GET,
-		url: "/server/fetch/*",
+		url: '/server/fetch/*',
 		async handler(request, reply) {
-			const key = request.params["*"] as string;
+			const key = request.params['*'];
 			const result = await fetch(key);
-			reply.send({ status: "ok", key, result });
+			await reply.send({ status: 'ok', key, result });
 		},
 	},
 	{
 		method: Method.PATCH,
-		url: "/server/modify/*",
+		url: '/server/modify/*',
 		async handler(request, reply) {
-			const key = request.params["*"] as string;
-			const patch = request.body;
+			const key = request.params['*'];
+			const patch = request.body as Record<string, unknown>;
 			await modify(key, patch);
-			reply.send({ status: "ok", key, patch });
+			await reply.send({ status: 'ok', key, patch });
 		},
 	},
 	{
 		method: Method.DELETE,
-		url: "/server/remove/*",
+		url: '/server/remove/*',
 		async handler(request, reply) {
-			const key = request.params["*"] as string;
+			const key = request.params['*'];
 			await remove(key);
-			reply.send({ status: "ok", key });
+			await reply.send({ status: 'ok', key });
 		},
 	},
 ];

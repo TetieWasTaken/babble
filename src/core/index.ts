@@ -4,12 +4,13 @@
  * @packageDocumentation
  */
 
-import { promises as fs } from "node:fs";
-import writeFileAtomic from "write-file-atomic";
-import path from "node:path";
-import logger from "../linker/logger.js";
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import process from 'node:process';
+import writeFileAtomic from 'write-file-atomic';
+import logger from '../linker/logger.js';
 
-const dataFile = path.resolve(process.cwd(), "data", "db.json");
+const dataFile = path.resolve(process.cwd(), 'data', 'db.json');
 
 /**
  * Reads the entire database
@@ -17,10 +18,10 @@ const dataFile = path.resolve(process.cwd(), "data", "db.json");
  */
 async function _read(): Promise<Record<string, any>> {
 	try {
-		const raw = await fs.readFile(dataFile, "utf-8");
+		const raw = await fs.readFile(dataFile, 'utf8');
 		return JSON.parse(raw) as Record<string, any>;
-	} catch (err) {
-		logger.error("Failed to read DB:", err);
+	} catch (error) {
+		logger.error('Failed to read DB:', error);
 		return {};
 	}
 }
@@ -32,9 +33,9 @@ async function _read(): Promise<Record<string, any>> {
 async function _write(data: Record<string, any>): Promise<void> {
 	try {
 		const json = JSON.stringify(data, null, 2);
-		await writeFileAtomic(dataFile, json, "utf-8");
-	} catch (err) {
-		logger.error("Failed to write DB:", err);
+		await writeFileAtomic(dataFile, json, 'utf8');
+	} catch (error) {
+		logger.error('Failed to write DB:', error);
 	}
 }
 
@@ -44,8 +45,17 @@ async function _write(data: Record<string, any>): Promise<void> {
  * @param pathParts the path to read
  * @returns the value stored at that path
  */
-function _get(obj: any, pathParts: string[]): any {
-	return pathParts.reduce((acc, key) => (acc != null && typeof acc === "object" ? acc[key] : undefined), obj);
+function _get(object: Record<string, unknown>, pathParts: string[]): Record<string, unknown> | string | undefined {
+	let current = object;
+	for (const key of pathParts) {
+		if (current === null || typeof current !== 'object' || !(key in current)) {
+			return undefined;
+		}
+
+		current = current[key] as Record<string, unknown>;
+	}
+
+	return current;
 }
 
 /**
@@ -54,15 +64,17 @@ function _get(obj: any, pathParts: string[]): any {
  * @param pathParts the path to write to
  * @param value the value to write
  */
-function _set(obj: any, pathParts: string[], value: any): void {
+function _set(object: Record<string, unknown>, pathParts: string[], value: unknown): void {
 	const lastKey = pathParts.pop()!;
-	const parent = pathParts.reduce((acc, key) => {
-		if (acc[key] == null || typeof acc[key] !== "object") {
-			acc[key] = {};
+	let parent: Record<string, unknown> = object;
+
+	for (const key of pathParts) {
+		if (parent[key] === null || typeof parent[key] !== 'object') {
+			parent[key] = {};
 		}
 
-		return acc[key];
-	}, obj);
+		parent = parent[key] as Record<string, unknown>;
+	}
 
 	parent[lastKey] = value;
 }
@@ -73,11 +85,21 @@ function _set(obj: any, pathParts: string[], value: any): void {
  * @param pathParts the path to delete
  * @returns if the operation was successful
  */
-function _delete(obj: any, pathParts: string[]): boolean {
+function _delete(object: Record<string, unknown>, pathParts: string[]): boolean {
 	const lastKey = pathParts.pop()!;
-	const parent = pathParts.reduce((acc, key) => (acc != null && typeof acc === "object" ? acc[key] : undefined), obj);
-	if (parent && Object.prototype.hasOwnProperty.call(parent, lastKey)) {
-		delete parent[lastKey];
+	let parent: Record<string, unknown> | undefined = object;
+
+	for (const key of pathParts) {
+		if (parent === null || typeof parent !== 'object') {
+			parent = undefined;
+			break;
+		}
+
+		parent = parent[key] as Record<string, unknown>;
+	}
+
+	if (parent !== null && typeof parent === 'object' && Object.hasOwn(parent, lastKey)) {
+		Reflect.deleteProperty(parent, lastKey);
 		return true;
 	}
 
@@ -94,12 +116,12 @@ function _delete(obj: any, pathParts: string[]): boolean {
  *
  * @returns the updated database
  */
-export async function add(path: string, doc: any) {
-	const db = await _read();
-	const parts = path.split("/").filter(Boolean);
-	_set(db, parts, doc);
-	await _write(db);
-	return db;
+export async function add(path: string, document: unknown) {
+	const database = await _read();
+	const parts = path.split('/').filter(Boolean);
+	_set(database, parts, document as any);
+	await _write(database);
+	return database;
 }
 
 /**
@@ -108,9 +130,9 @@ export async function add(path: string, doc: any) {
  * @returns the fetched value
  */
 export async function fetch(path: string) {
-	const db = await _read();
-	const parts = path.split("/").filter(Boolean);
-	return _get(db, parts);
+	const database = await _read();
+	const parts = path.split('/').filter(Boolean);
+	return _get(database, parts);
 }
 
 /**
@@ -119,20 +141,20 @@ export async function fetch(path: string) {
  * @param patch the new value
  * @returns the updated database
  */
-export async function modify(path: string, patch: any) {
-	const db = await _read();
-	const parts = path.split("/").filter(Boolean);
-	const existing = _get(db, parts);
+export async function modify(path: string, patch: Record<string, unknown>) {
+	const database = await _read();
+	const parts = path.split('/').filter(Boolean);
+	const existing = _get(database, parts);
 
-	if (existing !== null && typeof existing === "object") {
-		const merged = { ...existing, ...patch };
-		_set(db, [...parts], merged);
+	if (existing !== null && typeof existing === 'object') {
+		const merged: Record<string, unknown> = { ...existing, ...patch };
+		_set(database, [...parts], merged);
 	} else {
-		_set(db, [...parts], patch);
+		_set(database, [...parts], patch);
 	}
 
-	await _write(db);
-	return db;
+	await _write(database);
+	return database;
 }
 
 /**
@@ -141,9 +163,9 @@ export async function modify(path: string, patch: any) {
  * @returns the updated database
  */
 export async function remove(path: string) {
-	const db = await _read();
-	const parts = path.split("/").filter(Boolean);
-	_delete(db, parts);
-	await _write(db);
-	return db;
+	const database = await _read();
+	const parts = path.split('/').filter(Boolean);
+	_delete(database, parts);
+	await _write(database);
+	return database;
 }

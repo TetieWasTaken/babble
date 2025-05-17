@@ -7,12 +7,12 @@
  * @packageDocumentation
  */
 
-import Fastify from "fastify";
-import logger from "../linker/logger.js";
-import routes from "./routes.js";
+import fastifyFactory from 'fastify';
+import logger from '../linker/logger.js';
+import routes from './routes.js';
 
 export async function startServer() {
-	const fastify = Fastify({ loggerInstance: logger });
+	const fastify = fastifyFactory({ loggerInstance: logger });
 
 	for (const route of routes) {
 		fastify.route(route);
@@ -20,8 +20,13 @@ export async function startServer() {
 
 	try {
 		await fastify.listen({ port: 6363 });
-	} catch (err) {
-		fastify.log.error(err);
-		process.exit(1);
+	} catch (error: unknown) {
+		fastify.log.error(error);
+
+		if (error instanceof Error) {
+			throw new TypeError(error.message);
+		}
+
+		throw new Error(String(error));
 	}
 }

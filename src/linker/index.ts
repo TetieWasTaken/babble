@@ -4,13 +4,30 @@
  * @packageDocumentation
  */
 
-import logger from "./logger.js";
-import { startServer } from "../server/index.js";
-import { startCLI } from "../cli/index.js";
-export { add, fetch, modify, remove } from "../core/index.js";
+import { startServer } from '../server/index.js';
+import { startCli } from '../cli/index.js';
+import logger from './logger.js';
 
-logger.warn("Starting server");
-startServer();
+export { add, fetch, modify, remove } from '../core/index.js';
 
-logger.warn("Starting CLI");
-startCLI();
+logger.warn('Starting server');
+await startServer().catch((error: unknown) => {
+	logger.error(error);
+
+	if (error instanceof Error) {
+		throw new TypeError(error.message);
+	}
+
+	throw new Error(String(error));
+});
+
+logger.warn('Starting CLI');
+await startCli().catch((error: unknown) => {
+	logger.error(error);
+
+	if (error instanceof Error) {
+		throw new TypeError(error.message);
+	}
+
+	throw new Error(String(error));
+});
