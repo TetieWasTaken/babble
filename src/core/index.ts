@@ -12,16 +12,35 @@ import logger from '../linker/logger.js';
 
 const dataFile = path.resolve(process.cwd(), 'data', 'db.json');
 
+let cache: Record<string, any> | null = null;
+let lastCacheUpdate = 0;
+const timeToLive = 60000;
+
 /**
  * Reads the entire database
  * @returns the existing data
  */
 async function _read(): Promise<Record<string, any>> {
+	const now = Date.now();
+
+	if (cache && now - lastCacheUpdate < timeToLive) {
+		return cache;
+	}
+
 	try {
 		const raw = await fs.readFile(dataFile, 'utf8');
-		return JSON.parse(raw) as Record<string, any>;
+		const parsed = JSON.parse(raw) as Record<string, any>;
+
+		cache = parsed;
+		lastCacheUpdate = now;
+
+		return parsed;
 	} catch (error) {
 		logger.error('Failed to read DB:', error);
+
+		cache = {};
+		lastCacheUpdate = now;
+
 		return {};
 	}
 }
@@ -34,6 +53,9 @@ async function _write(data: Record<string, any>): Promise<void> {
 	try {
 		const json = JSON.stringify(data, null, 2);
 		await writeFileAtomic(dataFile, json, 'utf8');
+
+		cache = data;
+		lastCacheUpdate = Date.now();
 	} catch (error) {
 		logger.error('Failed to write DB:', error);
 	}
