@@ -34,7 +34,7 @@ const routes: Route[] = [
 		method: Method.GET,
 		url: "/server/fetch/*",
 		async handler(request, reply) {
-			const { key } = request.params;
+			const key = request.params["*"] as string;
 			const result = await fetch(key);
 			reply.send({ status: "ok", key, result });
 		},
@@ -43,7 +43,7 @@ const routes: Route[] = [
 		method: Method.PATCH,
 		url: "/server/modify/*",
 		async handler(request, reply) {
-			const { key } = request.params;
+			const key = request.params["*"] as string;
 			const patch = request.body;
 			await modify(key, patch);
 			reply.send({ status: "ok", key, patch });
@@ -53,7 +53,7 @@ const routes: Route[] = [
 		method: Method.DELETE,
 		url: "/server/remove/*",
 		async handler(request, reply) {
-			const { key } = request.params;
+			const key = request.params["*"] as string;
 			await remove(key);
 			reply.send({ status: "ok", key });
 		},
