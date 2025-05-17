@@ -29,4 +29,6 @@ export async function startServer() {
 
 		throw new Error(String(error));
 	}
+
+	return fastify;
 }
