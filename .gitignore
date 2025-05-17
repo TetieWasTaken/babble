@@ -131,3 +131,6 @@ dist
 
 # MacOS
 .DS_Store
+
+# Database
+data/db.json
