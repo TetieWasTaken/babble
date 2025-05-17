@@ -8,6 +8,12 @@ type Action = {
 	action: 'add' | 'fetch' | 'modify' | 'remove';
 };
 
+type RequestResult = {
+	status: string;
+	key: string;
+	result: Record<string, unknown>;
+};
+
 const methodMap: Record<Action['action'], Method> = {
 	add: Method.POST,
 	fetch: Method.GET,
@@ -19,6 +25,19 @@ const instructions = { navigation: 'Move up or down using the arrow keys', pager
 const theme = {
 	helpMode: 'always' as const,
 };
+
+async function sendRequest(key: string, action: string, body?: Record<string, unknown> | undefined) {
+	const url = `http://localhost:6363/server/${action}/${encodeURIComponent(key)}`;
+
+	const result = await fetch(url, {
+		method: methodMap[action],
+		headers: { 'Content-Type': 'application/json' },
+		body: body ? JSON.stringify(body) : action === 'remove' ? '{}' : undefined,
+	});
+
+	const data = await result.json();
+	return data;
+}
 
 export async function startCli() {
 	let exit = false;
@@ -67,9 +86,17 @@ export async function startCli() {
 
 		let body: Record<string, unknown> | undefined;
 		if (action === 'add' || action === 'modify') {
+			let existing = { result: {} };
+			if (action === 'modify') {
+				existing = (await sendRequest(key, 'fetch')) as RequestResult;
+
+				console.log(existing);
+			}
+
 			const json = await editor({
 				message: 'Enter document as JSON:',
 				postfix: '.json',
+				default: JSON.stringify(existing.result),
 			});
 
 			try {
@@ -80,14 +107,7 @@ export async function startCli() {
 			}
 		}
 
-		const url = `http://localhost:6363/server/${action}/${encodeURIComponent(key)}`;
-		const result = await fetch(url, {
-			method: methodMap[action],
-			headers: { 'Content-Type': 'application/json' },
-			body: body ? JSON.stringify(body) : action === 'remove' ? '{}' : undefined,
-		});
-
-		const data = await result.json();
+		const data = await sendRequest(key, action, body);
 		console.log('→', data);
 	}
 
