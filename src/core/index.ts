@@ -71,12 +71,15 @@ export async function fetch(path: string) {
 export async function modify(path: string, patch: any) {
 	const db = await _read();
 	const parts = path.split("/").filter(Boolean);
-	const existing = _get(db, parts) || {};
-	if (typeof existing !== "object") {
-		throw new Error("Can only patch objects");
+	const existing = _get(db, parts);
+
+	if (existing !== null && typeof existing === "object") {
+		const merged = { ...existing, ...patch };
+		_set(db, [...parts], merged);
+	} else {
+		_set(db, [...parts], patch);
 	}
-	const merged = { ...existing, ...patch };
-	_set(db, parts, merged);
+
 	await _write(db);
 	return db;
 }
