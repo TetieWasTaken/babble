@@ -1,6 +1,8 @@
-import { select, editor, input, Separator } from '@inquirer/prompts';
+import { select, editor, search, input, Separator } from '@inquirer/prompts';
 import fetch from 'node-fetch';
 import { Method } from '../server/routes.js';
+import { getAllKeyPaths } from '../core/index.js';
+import { distance } from 'fastest-levenshtein';
 
 type Action = {
 	action: 'add' | 'fetch' | 'modify' | 'remove';
@@ -13,6 +15,11 @@ const methodMap: Record<Action['action'], Method> = {
 	remove: Method.DELETE,
 };
 
+const instructions = { navigation: 'Move up or down using the arrow keys', pager: '' };
+const theme = {
+	helpMode: 'always' as const,
+};
+
 export async function startCli() {
 	let exit = false;
 
@@ -21,13 +28,15 @@ export async function startCli() {
 		const action = await select({
 			message: 'Choose an action:',
 			choices: [
-				{ name: 'add', value: 'add' },
-				{ name: 'fetch', value: 'fetch' },
-				{ name: 'modify', value: 'modify' },
-				{ name: 'delete', value: 'delete' },
+				{ name: 'add', value: 'add', description: 'Add an entry to the database' },
+				{ name: 'fetch', value: 'fetch', description: 'Fetch an entry from the database' },
+				{ name: 'modify', value: 'modify', description: 'Modify an entry in the database' },
+				{ name: 'remove', value: 'remove', description: 'Remove an entry in the database' },
 				new Separator(),
-				{ name: 'exit', value: 'exit' },
+				{ name: 'exit', value: 'exit', description: 'Exits the CLI and shuts down the server' },
 			],
+			instructions: instructions,
+			theme: theme,
 		});
 
 		if (action === 'exit') {
@@ -35,12 +44,32 @@ export async function startCli() {
 			break;
 		}
 
-		const key = await input({ message: 'Document key:' });
+		const keys = await getAllKeyPaths();
+		let key = '';
+
+		if (action === 'add') {
+			key = await input({ message: 'Document key:' });
+		} else {
+			key = await search({
+				message: 'Document key:',
+				source: async (input, { signal }) => {
+					if (!input || input.length < 2) return [];
+
+					return keys
+						.map((k) => ({ key: k, dist: distance(k, input) }))
+						.filter((item) => item.dist < 5)
+						.sort((a, b) => a.dist - b.dist)
+						.map((item) => item.key);
+				},
+				theme,
+			});
+		}
 
 		let body: Record<string, unknown> | undefined;
 		if (action === 'add' || action === 'modify') {
 			const json = await editor({
 				message: 'Enter document as JSON:',
+				postfix: '.json',
 			});
 
 			try {

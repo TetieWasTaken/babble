@@ -191,3 +191,27 @@ export async function remove(path: string) {
 	await _write(database);
 	return database;
 }
+
+/**
+ * Recursively collect all key paths in an object
+ * @param obj the object to walk
+ * @param prefix the current key prefix (slash-delimited)
+ * @returns an array of full key paths, e.g. ["foo", "foo/bar", "baz/qux"]
+ */
+export async function getAllKeyPaths(obj?: Record<string, any>, prefix: string = ''): Promise<string[]> {
+	const paths: string[] = [];
+
+	if (!obj) obj = await _read();
+
+	for (const key of Object.keys(obj)) {
+		const fullPath = prefix ? `${prefix}/${key}` : key;
+		paths.push(fullPath);
+
+		const val = obj[key];
+		if (val && typeof val === 'object' && !Array.isArray(val)) {
+			paths.push(...(await getAllKeyPaths(val, fullPath)));
+		}
+	}
+
+	return paths;
+}
