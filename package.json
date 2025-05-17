@@ -21,6 +21,7 @@
 		"xo": "^0.60.0"
 	},
 	"dependencies": {
+		"@types/write-file-atomic": "^4.0.3",
 		"fastify": "^5.3.2",
 		"inquirer": "^12.6.1",
 		"node-fetch": "^3.3.2",
