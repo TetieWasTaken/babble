@@ -43,7 +43,7 @@ export async function startCLI() {
 		const res = await fetch(url, {
 			method: action === "add" ? "POST" : action === "fetch" ? "GET" : action === "modify" ? "PATCH" : "DELETE",
 			headers: { "Content-Type": "application/json" },
-			body: body ? JSON.stringify(body) : "{}",
+			body: body ? JSON.stringify(body) : action === "remove" ? "{}" : undefined,
 		});
 		const data = await res.json();
 		console.log("→", data);
