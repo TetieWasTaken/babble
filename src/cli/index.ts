@@ -26,7 +26,11 @@ const theme = {
 	helpMode: 'always' as const,
 };
 
-async function sendRequest(key: string, action: string, body?: Record<string, unknown> | undefined) {
+async function sendRequest(
+	key: string,
+	action: string,
+	body?: Record<string, unknown> | undefined,
+): Promise<RequestResult> {
 	const url = `http://localhost:6363/server/${action}/${encodeURIComponent(key)}`;
 
 	const result = await fetch(url, {
@@ -36,7 +40,7 @@ async function sendRequest(key: string, action: string, body?: Record<string, un
 	});
 
 	const data = await result.json();
-	return data;
+	return data as RequestResult;
 }
 
 export async function startCli() {
@@ -88,7 +92,7 @@ export async function startCli() {
 		if (action === 'add' || action === 'modify') {
 			let existing = { result: {} };
 			if (action === 'modify') {
-				existing = (await sendRequest(key, 'fetch')) as RequestResult;
+				existing = await sendRequest(key, 'fetch');
 
 				console.log(existing);
 			}
@@ -108,7 +112,7 @@ export async function startCli() {
 		}
 
 		const data = await sendRequest(key, action, body);
-		console.log('→', data);
+		console.log('→', data.result);
 	}
 
 	/* eslint-enable no-await-in-loop */
