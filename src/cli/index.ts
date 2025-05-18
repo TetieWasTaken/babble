@@ -95,8 +95,6 @@ export async function startCli() {
 			let existing = { result: {} };
 			if (action === 'modify') {
 				existing = await sendRequest(key, 'fetch');
-
-				console.log(existing);
 			}
 
 			const json = await editor({
