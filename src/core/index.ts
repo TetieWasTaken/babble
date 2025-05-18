@@ -20,7 +20,7 @@ const timeToLive = 60_000;
  * Reads the entire database
  * @returns the existing data
  */
-async function _read(): Promise<Record<string, any>> {
+async function _read(): Promise<Record<string, unknown>> {
 	const now = Date.now();
 
 	if (cache && now - lastCacheUpdate < timeToLive) {
@@ -29,7 +29,7 @@ async function _read(): Promise<Record<string, any>> {
 
 	try {
 		const raw = await fs.readFile(dataFile, 'utf8');
-		const parsed = JSON.parse(raw) as Record<string, any>;
+		const parsed = JSON.parse(raw) as Record<string, unknown>;
 
 		cache = parsed;
 		lastCacheUpdate = now;
@@ -49,7 +49,7 @@ async function _read(): Promise<Record<string, any>> {
  * Overwrites the database
  * @param data the data to write
  */
-async function _write(data: Record<string, any>): Promise<void> {
+async function _write(data: Record<string, unknown>): Promise<void> {
 	try {
 		const json = JSON.stringify(data, null, 2);
 		await writeFileAtomic(dataFile, json, 'utf8');
@@ -141,7 +141,7 @@ function _delete(object: Record<string, unknown>, pathParts: string[]): boolean 
 export async function add(path: string, document: unknown) {
 	const database = await _read();
 	const parts = path.split('/').filter(Boolean);
-	_set(database, parts, document as any);
+	_set(database, parts, document);
 	await _write(database);
 	return database;
 }
