@@ -12,9 +12,9 @@ import logger from '../linker/logger.js';
 
 const dataFile = path.resolve(process.cwd(), 'data', 'db.json');
 
-let cache: Record<string, any> | null = null;
+let cache: Record<string, unknown> | undefined;
 let lastCacheUpdate = 0;
-const timeToLive = 60000;
+const timeToLive = 60_000;
 
 /**
  * Reads the entire database
@@ -198,19 +198,26 @@ export async function remove(path: string) {
  * @param prefix the current key prefix (slash-delimited)
  * @returns an array of full key paths, e.g. ["foo", "foo/bar", "baz/qux"]
  */
-export async function getAllKeyPaths(obj?: Record<string, any>, prefix: string = ''): Promise<string[]> {
+export async function getAllKeyPaths(object?: Record<string, unknown>, prefix = ''): Promise<string[]> {
 	const paths: string[] = [];
 
-	if (!obj) obj = await _read();
+	object ||= await _read();
 
-	for (const key of Object.keys(obj)) {
+	const nestedWalks: Array<Promise<string[]>> = [];
+
+	for (const key of Object.keys(object)) {
 		const fullPath = prefix ? `${prefix}/${key}` : key;
 		paths.push(fullPath);
 
-		const val = obj[key];
-		if (val && typeof val === 'object' && !Array.isArray(val)) {
-			paths.push(...(await getAllKeyPaths(val, fullPath)));
+		const value = object[key];
+		if (value && typeof value === 'object' && !Array.isArray(value)) {
+			nestedWalks.push(getAllKeyPaths(value as Record<string, unknown>, fullPath));
 		}
+	}
+
+	const nestedResults = await Promise.all(nestedWalks);
+	for (const subPaths of nestedResults) {
+		paths.push(...subPaths);
 	}
 
 	return paths;

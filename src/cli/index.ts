@@ -1,8 +1,8 @@
 import { select, editor, search, input, Separator } from '@inquirer/prompts';
 import fetch from 'node-fetch';
+import { distance } from 'fastest-levenshtein';
 import { Method } from '../server/routes.js';
 import { getAllKeyPaths } from '../core/index.js';
-import { distance } from 'fastest-levenshtein';
 
 type Action = {
 	action: 'add' | 'fetch' | 'modify' | 'remove';
@@ -34,7 +34,7 @@ async function sendRequest(
 	const url = `http://localhost:6363/server/${action}/${encodeURIComponent(key)}`;
 
 	const result = await fetch(url, {
-		method: methodMap[action],
+		method: methodMap[action] as Action['action'],
 		headers: { 'Content-Type': 'application/json' },
 		body: body ? JSON.stringify(body) : action === 'remove' ? '{}' : undefined,
 	});
@@ -58,8 +58,8 @@ export async function startCli() {
 				new Separator(),
 				{ name: 'exit', value: 'exit', description: 'Exits the CLI and shuts down the server' },
 			],
-			instructions: instructions,
-			theme: theme,
+			instructions,
+			theme,
 		});
 
 		if (action === 'exit') {
@@ -75,8 +75,10 @@ export async function startCli() {
 		} else {
 			key = await search({
 				message: 'Document key:',
-				source: async (input, { signal }) => {
-					if (!input || input.length < 2) return [];
+				async source(input, { signal }) {
+					if (!input || input.length < 2) {
+						return [];
+					}
 
 					return keys
 						.map((k) => ({ key: k, dist: distance(k, input) }))

@@ -4,10 +4,10 @@
  * @packageDocumentation
  */
 
+import process from 'node:process';
 import { startServer } from '../server/index.js';
 import { startCli } from '../cli/index.js';
 import logger from './logger.js';
-import process from 'node:process';
 
 export { add, fetch, modify, remove } from '../core/index.js';
 
@@ -25,16 +25,15 @@ const fastify = await startServer().catch((error: unknown) => {
 const shutdown = async () => {
 	logger.warn('Received shutdown signal');
 	await fastify.close();
-	process.exit(0);
 };
 
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
 logger.warn('Starting CLI');
-await startCli().catch((error: unknown) => {
+await startCli().catch(async (error: unknown) => {
 	if (error instanceof Error && error.message.includes('User force closed the prompt')) {
-		shutdown();
+		await shutdown();
 	} else {
 		logger.error(error);
 
