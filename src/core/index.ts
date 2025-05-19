@@ -62,12 +62,12 @@ async function _write(data: Record<string, unknown>): Promise<void> {
 }
 
 /**
- * Get any value in the given object
+ * Get any document in the given object
  * @param obj the object to read from
  * @param pathParts the path to read
- * @returns the value stored at that path
+ * @returns the document stored at that path
  */
-function _get(object: Record<string, unknown>, pathParts: string[]): Record<string, unknown> | string | undefined {
+function _get(object: Record<string, unknown>, pathParts: string[]): Record<string, unknown> | undefined {
 	let current = object;
 	for (const key of pathParts) {
 		if (current === null || typeof current !== 'object' || !(key in current)) {
@@ -81,12 +81,12 @@ function _get(object: Record<string, unknown>, pathParts: string[]): Record<stri
 }
 
 /**
- * Sets any value in the given object
- * @param obj the object to set the value in
+ * Sets any document in the given object
+ * @param obj the object to set the document in
  * @param pathParts the path to write to
- * @param value the value to write
+ * @param document the document to write
  */
-function _set(object: Record<string, unknown>, pathParts: string[], value: unknown): void {
+function _set(object: Record<string, unknown>, pathParts: string[], document: unknown): void {
 	const lastKey = pathParts.pop()!;
 	let parent: Record<string, unknown> = object;
 
@@ -98,7 +98,7 @@ function _set(object: Record<string, unknown>, pathParts: string[], value: unkno
 		parent = parent[key] as Record<string, unknown>;
 	}
 
-	parent[lastKey] = value;
+	parent[lastKey] = document;
 }
 
 /**
@@ -129,27 +129,27 @@ function _delete(object: Record<string, unknown>, pathParts: string[]): boolean 
 }
 
 /**
- * Adds a value to the database
+ * Adds a document to the database
  * @param path the slash-delimited key path to write to
- * @param doc the value to write
+ * @param document the document to write
  *
  * @remarks
  * internally similar to {@link modify}
  *
- * @returns the updated database
+ * @returns the added document
  */
 export async function add(path: string, document: unknown) {
 	const database = await _read();
 	const parts = path.split('/').filter(Boolean);
 	_set(database, parts, document);
 	await _write(database);
-	return database;
+	return document;
 }
 
 /**
- * Fetches a value from the database
+ * Fetches a document from the database
  * @param path the slash-delimited key path to read
- * @returns the fetched value
+ * @returns the fetched document
  */
 export async function fetch(path: string) {
 	const database = await _read();
@@ -158,10 +158,10 @@ export async function fetch(path: string) {
 }
 
 /**
- * Modifies a value in the database
+ * Modifies a document in the database
  * @param path the slash-delimited key path to modify
- * @param patch the new value
- * @returns the updated database
+ * @param patch the new document
+ * @returns the updated document
  */
 export async function modify(path: string, patch: Record<string, unknown>) {
 	const database = await _read();
@@ -176,20 +176,18 @@ export async function modify(path: string, patch: Record<string, unknown>) {
 	}
 
 	await _write(database);
-	return database;
+	return patch;
 }
 
 /**
  * Removes a kv pair from the database
  * @param path the slash-delimited key path to remove
- * @returns the updated database
  */
 export async function remove(path: string) {
 	const database = await _read();
 	const parts = path.split('/').filter(Boolean);
 	_delete(database, parts);
 	await _write(database);
-	return database;
 }
 
 /**
@@ -209,9 +207,9 @@ export async function getAllKeyPaths(object?: Record<string, unknown>, prefix = 
 		const fullPath = prefix ? `${prefix}/${key}` : key;
 		paths.push(fullPath);
 
-		const value = object[key];
-		if (value && typeof value === 'object' && !Array.isArray(value)) {
-			nestedWalks.push(getAllKeyPaths(value as Record<string, unknown>, fullPath));
+		const document = object[key];
+		if (document && typeof document === 'object' && !Array.isArray(document)) {
+			nestedWalks.push(getAllKeyPaths(document as Record<string, unknown>, fullPath));
 		}
 	}
 

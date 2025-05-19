@@ -10,8 +10,8 @@ type Action = {
 
 type RequestResult = {
 	status: string;
-	key: string;
-	result: Record<string, unknown>;
+	data: { key: string; document?: unknown };
+	meta: { timestamp: Date };
 };
 
 const methodMap: Record<Action['action'], Method> = {
@@ -26,11 +26,7 @@ const theme = {
 	helpMode: 'always' as const,
 };
 
-async function sendRequest(
-	key: string,
-	action: string,
-	body?: Record<string, unknown> | undefined,
-): Promise<RequestResult> {
+async function sendRequest(key: string, action: string, body?: Record<string, unknown> | undefined) {
 	const url = `http://localhost:6363/server/${action}/${encodeURIComponent(key)}`;
 
 	const result = await fetch(url, {
@@ -39,8 +35,7 @@ async function sendRequest(
 		body: body ? JSON.stringify(body) : action === 'remove' ? '{}' : undefined,
 	});
 
-	const data = await result.json();
-	return data as RequestResult;
+	return result;
 }
 
 export async function startCli() {
@@ -92,15 +87,25 @@ export async function startCli() {
 
 		let body: Record<string, unknown> | undefined;
 		if (action === 'add' || action === 'modify') {
-			let existing = { result: {} };
+			let existing: RequestResult = {
+				status: '',
+				data: { key, document: {} },
+				meta: { timestamp: new Date() },
+			};
+
 			if (action === 'modify') {
-				existing = await sendRequest(key, 'fetch');
+				const result = await sendRequest(key, 'fetch');
+				if (!result.ok) {
+					console.error(result);
+					return;
+				}
+				existing = (await result.json()) as RequestResult;
 			}
 
 			const json = await editor({
 				message: 'Enter document as JSON:',
 				postfix: '.json',
-				default: JSON.stringify(existing.result),
+				default: JSON.stringify(existing.data.document),
 			});
 
 			try {
@@ -111,8 +116,12 @@ export async function startCli() {
 			}
 		}
 
-		const data = await sendRequest(key, action, body);
-		console.log('→', data.result);
+		const result = await sendRequest(key, action, body);
+		if (!result.ok) console.error('→', result);
+		else {
+			const resultJson = (await result.json()) as RequestResult;
+			console.log('→', resultJson.data.document ?? `${resultJson.data.key} removed`);
+		}
 	}
 
 	/* eslint-enable no-await-in-loop */
