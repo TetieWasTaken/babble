@@ -21,6 +21,7 @@
 		"xo": "^0.60.0"
 	},
 	"dependencies": {
+		"@fastify/basic-auth": "^6.2.0",
 		"@inquirer/prompts": "^7.5.1",
 		"@types/write-file-atomic": "^4.0.3",
 		"fastest-levenshtein": "^1.0.16",
