@@ -41,6 +41,8 @@ async function sendRequest(key: string, action: string, body?: Record<string, un
 export async function startCli() {
 	let exit = false;
 
+	console.log('\x1b[1;91m BABBLE \x1b[0;32mv1.0.0 \x1b[0m');
+
 	/* eslint-disable no-await-in-loop */
 	while (!exit) {
 		const action = await select({
