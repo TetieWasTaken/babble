@@ -12,23 +12,25 @@ export enum Method {
 	POST = 'POST',
 }
 
-type Wildcard = { Params: { '*': string } };
+type ParamRequest = { Params: { uid: string; '*': string } };
 
 type Route = {
 	method: Method;
 	url: string;
-	handler: (request: FastifyRequest<Wildcard>, reply: FastifyReply) => void;
+	handler: (request: FastifyRequest<ParamRequest>, reply: FastifyReply) => void;
 };
 
 const routes: Route[] = [
 	{
 		method: Method.POST,
-		url: '/server/add/*',
+		url: '/server/:uid/add/*',
 		async handler(request, reply) {
+			const uid = request.params.uid;
 			const key = request.params['*'];
 			const document = request.body as Record<string, unknown>;
+
 			try {
-				const created = await add(key, document);
+				const created = await add(key, document, uid);
 				return reply.code(201).send({
 					data: { key, document: created },
 					meta: { timestamp: new Date() },
@@ -42,11 +44,13 @@ const routes: Route[] = [
 	},
 	{
 		method: Method.GET,
-		url: '/server/fetch/*',
+		url: '/server/:uid/fetch/*',
 		async handler(request, reply) {
+			const uid = request.params.uid;
 			const key = request.params['*'];
+
 			try {
-				const result = await fetch(key);
+				const result = await fetch(key, uid);
 				if (result === undefined) {
 					return reply.code(404).send({
 						errors: [{ code: 'not_found', message: `No document was found at key ${key}.` }],
@@ -66,12 +70,14 @@ const routes: Route[] = [
 	},
 	{
 		method: Method.PATCH,
-		url: '/server/modify/*',
+		url: '/server/:uid/modify/*',
 		async handler(request, reply) {
+			const uid = request.params.uid;
 			const key = request.params['*'];
 			const patch = request.body as Record<string, unknown>;
+
 			try {
-				const updated = await modify(key, patch);
+				const updated = await modify(key, patch, uid);
 				return reply.code(200).send({
 					data: { key, document: updated },
 					meta: { timestamp: new Date() },
@@ -85,12 +91,13 @@ const routes: Route[] = [
 	},
 	{
 		method: Method.DELETE,
-		url: '/server/remove/*',
+		url: '/server/:uid/remove/*',
 		async handler(request, reply) {
+			const uid = request.params.uid;
 			const key = request.params['*'];
 
 			try {
-				await remove(key);
+				await remove(key, uid);
 				return reply.code(200).send({ data: { key }, meta: { timestamp: new Date() } });
 			} catch (err) {
 				return reply.code(500).send({
