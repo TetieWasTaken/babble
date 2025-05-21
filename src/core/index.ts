@@ -10,7 +10,7 @@ import process from 'node:process';
 import writeFileAtomic from 'write-file-atomic';
 import logger from '../linker/logger.js';
 
-const dataFile = path.resolve(process.cwd(), 'data', 'db.json');
+const baseData = path.resolve(process.cwd(), 'data');
 
 let cache: Record<string, unknown> | undefined;
 let lastCacheUpdate = 0;
@@ -20,12 +20,14 @@ const timeToLive = 60_000;
  * Reads the entire database
  * @returns the existing data
  */
-async function _read(): Promise<Record<string, unknown>> {
+async function _read(uid: string): Promise<Record<string, unknown>> {
 	const now = Date.now();
 
 	if (cache && now - lastCacheUpdate < timeToLive) {
 		return cache;
 	}
+
+	const dataFile = path.resolve(process.cwd(), `${uid}.json`);
 
 	try {
 		const raw = await fs.readFile(dataFile, 'utf8');
@@ -49,7 +51,9 @@ async function _read(): Promise<Record<string, unknown>> {
  * Overwrites the database
  * @param data the data to write
  */
-async function _write(data: Record<string, unknown>): Promise<void> {
+async function _write(data: Record<string, unknown>, uid: string): Promise<void> {
+	const dataFile = path.resolve(process.cwd(), `${uid}.json`);
+
 	try {
 		const json = JSON.stringify(data, null, 2);
 		await writeFileAtomic(dataFile, json, 'utf8');
@@ -138,11 +142,11 @@ function _delete(object: Record<string, unknown>, pathParts: string[]): boolean 
  *
  * @returns the added document
  */
-export async function add(path: string, document: unknown) {
-	const database = await _read();
+export async function add(path: string, document: unknown, uid: string) {
+	const database = await _read(uid);
 	const parts = path.split('/').filter(Boolean);
 	_set(database, parts, document);
-	await _write(database);
+	await _write(database, uid);
 	return document;
 }
 
@@ -151,8 +155,8 @@ export async function add(path: string, document: unknown) {
  * @param path the slash-delimited key path to read
  * @returns the fetched document
  */
-export async function fetch(path: string) {
-	const database = await _read();
+export async function fetch(path: string, uid: string) {
+	const database = await _read(uid);
 	const parts = path.split('/').filter(Boolean);
 	return _get(database, parts);
 }
@@ -163,8 +167,8 @@ export async function fetch(path: string) {
  * @param patch the new document
  * @returns the updated document
  */
-export async function modify(path: string, patch: Record<string, unknown>) {
-	const database = await _read();
+export async function modify(path: string, patch: Record<string, unknown>, uid: string) {
+	const database = await _read(uid);
 	const parts = path.split('/').filter(Boolean);
 	const existing = _get(database, parts);
 
@@ -175,7 +179,7 @@ export async function modify(path: string, patch: Record<string, unknown>) {
 		_set(database, [...parts], patch);
 	}
 
-	await _write(database);
+	await _write(database, uid);
 	return patch;
 }
 
@@ -183,11 +187,11 @@ export async function modify(path: string, patch: Record<string, unknown>) {
  * Removes a kv pair from the database
  * @param path the slash-delimited key path to remove
  */
-export async function remove(path: string) {
-	const database = await _read();
+export async function remove(path: string, uid: string) {
+	const database = await _read(uid);
 	const parts = path.split('/').filter(Boolean);
 	_delete(database, parts);
-	await _write(database);
+	await _write(database, uid);
 }
 
 /**
@@ -196,10 +200,10 @@ export async function remove(path: string) {
  * @param prefix the current key prefix (slash-delimited)
  * @returns an array of full key paths, e.g. ["foo", "foo/bar", "baz/qux"]
  */
-export async function getAllKeyPaths(object?: Record<string, unknown>, prefix = ''): Promise<string[]> {
+export async function getAllKeyPaths(uid: string, object?: Record<string, unknown>, prefix = ''): Promise<string[]> {
 	const paths: string[] = [];
 
-	object ||= await _read();
+	object ||= await _read(uid);
 
 	const nestedWalks: Array<Promise<string[]>> = [];
 
@@ -209,7 +213,7 @@ export async function getAllKeyPaths(object?: Record<string, unknown>, prefix = 
 
 		const document = object[key];
 		if (document && typeof document === 'object' && !Array.isArray(document)) {
-			nestedWalks.push(getAllKeyPaths(document as Record<string, unknown>, fullPath));
+			nestedWalks.push(getAllKeyPaths(uid, document as Record<string, unknown>, fullPath));
 		}
 	}
 
