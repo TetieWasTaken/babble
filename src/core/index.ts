@@ -12,7 +12,7 @@ import logger from '../linker/logger.js';
 
 const dataFolder = path.resolve(process.cwd(), 'data');
 
-let cache: Record<string, unknown> | undefined;
+const cache = new Map<string, { data: Record<string, unknown>; lastUpdate: number }>();
 let lastCacheUpdate = 0;
 const timeToLive = 60_000;
 
@@ -23,8 +23,9 @@ const timeToLive = 60_000;
 async function _read(uid: string): Promise<Record<string, unknown>> {
 	const now = Date.now();
 
-	if (cache && now - lastCacheUpdate < timeToLive) {
-		return cache;
+	const cached = cache.get(uid);
+	if (cached && now - cached.lastUpdate < timeToLive) {
+		return cached.data;
 	}
 
 	const dataFile = path.resolve(dataFolder, `${uid}.json`);
@@ -33,17 +34,14 @@ async function _read(uid: string): Promise<Record<string, unknown>> {
 		const raw = await fs.readFile(dataFile, 'utf8');
 		const parsed = JSON.parse(raw) as Record<string, unknown>;
 
-		cache = parsed;
-		lastCacheUpdate = now;
-
+		cache.set(uid, { data: parsed, lastUpdate: now });
 		return parsed;
 	} catch (error) {
 		logger.error('Failed to read DB:', error);
 
-		cache = {};
-		lastCacheUpdate = now;
-
-		return {};
+		const empty = {};
+		cache.set(uid, { data: empty, lastUpdate: now });
+		return empty;
 	}
 }
 
@@ -58,8 +56,7 @@ async function _write(data: Record<string, unknown>, uid: string): Promise<void>
 		const json = JSON.stringify(data, null, 2);
 		await writeFileAtomic(dataFile, json, 'utf8');
 
-		cache = data;
-		lastCacheUpdate = Date.now();
+		cache.set(uid, { data, lastUpdate: Date.now() });
 	} catch (error) {
 		logger.error('Failed to write DB:', error);
 	}
