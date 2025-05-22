@@ -31,13 +31,15 @@ const routes: Route[] = [
 
 			try {
 				const created = await add(key, document, uid);
-				return reply.code(201).send({
+				return await reply.code(201).send({
 					data: { key, document: created },
 					meta: { timestamp: new Date() },
 				});
 			} catch (error) {
+				const message = error instanceof Error ? error.message : 'Unknown error';
+
 				return reply.code(500).send({
-					errors: [{ code: 'failed', message: error.message }],
+					errors: [{ code: 'failed', message }],
 				});
 			}
 		},
@@ -52,18 +54,20 @@ const routes: Route[] = [
 			try {
 				const result = await fetch(key, uid);
 				if (result === undefined) {
-					return reply.code(404).send({
+					return await reply.code(404).send({
 						errors: [{ code: 'not_found', message: `No document was found at key ${key}.` }],
 					});
 				}
 
-				return reply.code(200).send({
+				return await reply.code(200).send({
 					data: { key, document: result },
 					meta: { timestamp: new Date() },
 				});
 			} catch (error) {
+				const message = error instanceof Error ? error.message : 'Unknown error';
+
 				return reply.code(500).send({
-					errors: [{ code: 'failed', message: error.message }],
+					errors: [{ code: 'failed', message }],
 				});
 			}
 		},
@@ -78,13 +82,15 @@ const routes: Route[] = [
 
 			try {
 				const updated = await modify(key, patch, uid);
-				return reply.code(200).send({
+				return await reply.code(200).send({
 					data: { key, document: updated },
 					meta: { timestamp: new Date() },
 				});
 			} catch (error) {
+				const message = error instanceof Error ? error.message : 'Unknown error';
+
 				return reply.code(500).send({
-					errors: [{ code: 'failed', message: error.message }],
+					errors: [{ code: 'failed', message }],
 				});
 			}
 		},
@@ -98,10 +104,12 @@ const routes: Route[] = [
 
 			try {
 				await remove(key, uid);
-				return reply.code(200).send({ data: { key }, meta: { timestamp: new Date() } });
+				return await reply.code(200).send({ data: { key }, meta: { timestamp: new Date() } });
 			} catch (error) {
+				const message = error instanceof Error ? error.message : 'Unknown error';
+
 				return reply.code(500).send({
-					errors: [{ code: 'failed', message: error.message }],
+					errors: [{ code: 'failed', message }],
 				});
 			}
 		},
@@ -112,10 +120,12 @@ const routes: Route[] = [
 		async handler(_, reply) {
 			try {
 				const uids = await getUids();
-				return reply.code(200).send({ data: { uids }, meta: { timestamp: new Date() } });
+				return await reply.code(200).send({ data: { uids }, meta: { timestamp: new Date() } });
 			} catch (error) {
+				const message = error instanceof Error ? error.message : 'Unknown error';
+
 				return reply.code(500).send({
-					errors: [{ code: 'failed', message: error.message }],
+					errors: [{ code: 'failed', message }],
 				});
 			}
 		},
@@ -128,10 +138,12 @@ const routes: Route[] = [
 
 			try {
 				const created = await createNew(uid);
-				return reply.code(201).send({ data: { key: created }, meta: { timestamp: new Date() } });
+				return await reply.code(201).send({ data: { key: created }, meta: { timestamp: new Date() } });
 			} catch (error) {
+				const message = error instanceof Error ? error.message : 'Unknown error';
+
 				return reply.code(500).send({
-					errors: [{ code: 'failed', message: error.message }],
+					errors: [{ code: 'failed', message }],
 				});
 			}
 		},

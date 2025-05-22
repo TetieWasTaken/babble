@@ -107,7 +107,7 @@ export async function startCli() {
 
 	/* eslint-disable no-await-in-loop */
 	while (!exit) {
-		const action = await select({
+		const action: Action['action'] | 'exit' = await select({
 			message: 'Choose an action:',
 			choices: [
 				{ name: 'add', value: 'add', description: 'Add an entry to the database' },
