@@ -139,7 +139,7 @@ export async function startCli() {
 			};
 
 			if (action === 'modify') {
-				const result = await sendRequest(`/server/${uid}/fetch/${key}`, Method.GET);
+				const result = await sendRequest(`${uid}/fetch/${key}`, Method.GET);
 				if (!result.ok) {
 					console.error(result);
 					return;
@@ -161,7 +161,7 @@ export async function startCli() {
 			}
 		}
 
-		const result = await sendRequest(`/server/${uid}/${action}/${key}`, methodMap[action], body);
+		const result = await sendRequest(`${uid}/${action}/${key}`, methodMap[action], body);
 		if (!result.ok) console.error('→', result);
 		else {
 			const resultJson = (await result.json()) as RequestResult;
