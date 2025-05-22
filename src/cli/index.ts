@@ -31,7 +31,7 @@ async function sendRequest(path: string, method: Method, body?: Record<string, u
 
 	const result = await fetch(url, {
 		method,
-		...(body
+		...(body !== undefined
 			? {
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify(body),
