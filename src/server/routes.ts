@@ -1,5 +1,5 @@
 import { type FastifyRequest, type FastifyReply } from 'fastify';
-import { add, fetch, modify, remove } from '../linker/index.js';
+import { add, fetch, modify, remove, getUids } from '../linker/index.js';
 
 export enum Method {
 	GET = 'GET',
@@ -99,6 +99,20 @@ const routes: Route[] = [
 			try {
 				await remove(key, uid);
 				return reply.code(200).send({ data: { key }, meta: { timestamp: new Date() } });
+			} catch (err) {
+				return reply.code(500).send({
+					errors: [{ code: 'failed', message: err.message }],
+				});
+			}
+		},
+	},
+	{
+		method: Method.GET,
+		url: '/server/uid',
+		async handler(_, reply) {
+			try {
+				const uids = await getUids();
+				return reply.code(200).send({ data: { uids }, meta: { timestamp: new Date() } });
 			} catch (err) {
 				return reply.code(500).send({
 					errors: [{ code: 'failed', message: err.message }],

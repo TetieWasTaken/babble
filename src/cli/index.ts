@@ -10,7 +10,7 @@ type Action = {
 
 type RequestResult = {
 	status: string;
-	data: { key: string; document?: unknown };
+	data: { key: string; document?: unknown; uids?: string[] };
 	meta: { timestamp: Date };
 };
 
@@ -26,16 +26,28 @@ const theme = {
 	helpMode: 'always' as const,
 };
 
-async function sendRequest(key: string, action: string, body?: Record<string, unknown> | undefined) {
-	const url = `http://localhost:6363/server/${action}/${encodeURIComponent(key)}`;
+async function sendRequest(path: string, method: Method, body?: Record<string, unknown> | undefined) {
+	const url = `http://localhost:6363/server/${path}`;
 
 	const result = await fetch(url, {
-		method: methodMap[action] as Action['action'],
+		method: method,
 		headers: { 'Content-Type': 'application/json' },
-		body: body ? JSON.stringify(body) : action === 'remove' ? '{}' : undefined,
+		body: body ? JSON.stringify(body) : method === Method.DELETE ? '{}' : undefined,
 	});
 
 	return result;
+}
+
+function getAutocomplete(input: string | undefined, options: string[]) {
+	if (!input || input.length < 2) {
+		return [];
+	}
+
+	return options
+		.map((k) => ({ key: k, dist: distance(k, input) }))
+		.filter((item) => item.dist < 5)
+		.sort((a, b) => a.dist - b.dist)
+		.map((item) => item.key);
 }
 
 export async function startCli() {
@@ -45,6 +57,45 @@ export async function startCli() {
 
 	/* eslint-disable no-await-in-loop */
 	while (!exit) {
+		const uidResponse = await sendRequest('uid', Method.GET);
+		if (!uidResponse.ok) {
+			console.error(uidResponse);
+			return;
+		}
+
+		const uidList = (await uidResponse.json()) as RequestResult;
+
+		const isExisting = await select({
+			message: 'Use an existing database, or choose a new one:',
+			choices: [
+				{
+					name: 'existing',
+					value: true,
+					description: 'Chooses an existing database to use',
+					disabled: (uidList.data.uids?.length ?? 0) > 0,
+				},
+				new Separator(),
+				{ name: 'new', value: false, description: 'Exits the CLI and shuts down the server' },
+			],
+			instructions,
+			theme,
+		});
+
+		let uid: string;
+
+		if (isExisting) {
+			uid = await search({
+				message: 'Database uid:',
+				async source(input, { signal }) {
+					return getAutocomplete(input, uidList.data.uids ?? []);
+				},
+				theme,
+			});
+		} else {
+			console.log('Not implemented yet.');
+			return;
+		}
+
 		const action = await select({
 			message: 'Choose an action:',
 			choices: [
@@ -64,7 +115,7 @@ export async function startCli() {
 			break;
 		}
 
-		const keys = await getAllKeyPaths();
+		const keys = await getAllKeyPaths(uid);
 		let key = '';
 
 		if (action === 'add') {
@@ -73,15 +124,7 @@ export async function startCli() {
 			key = await search({
 				message: 'Document key:',
 				async source(input, { signal }) {
-					if (!input || input.length < 2) {
-						return [];
-					}
-
-					return keys
-						.map((k) => ({ key: k, dist: distance(k, input) }))
-						.filter((item) => item.dist < 5)
-						.sort((a, b) => a.dist - b.dist)
-						.map((item) => item.key);
+					return getAutocomplete(input, keys);
 				},
 				theme,
 			});
@@ -96,7 +139,7 @@ export async function startCli() {
 			};
 
 			if (action === 'modify') {
-				const result = await sendRequest(key, 'fetch');
+				const result = await sendRequest(`/server/${uid}/fetch/${key}`, Method.GET);
 				if (!result.ok) {
 					console.error(result);
 					return;
@@ -118,7 +161,7 @@ export async function startCli() {
 			}
 		}
 
-		const result = await sendRequest(key, action, body);
+		const result = await sendRequest(`/server/${uid}/${action}/${key}`, methodMap[action], body);
 		if (!result.ok) console.error('→', result);
 		else {
 			const resultJson = (await result.json()) as RequestResult;

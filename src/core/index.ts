@@ -10,7 +10,7 @@ import process from 'node:process';
 import writeFileAtomic from 'write-file-atomic';
 import logger from '../linker/logger.js';
 
-const baseData = path.resolve(process.cwd(), 'data');
+const dataFolder = path.resolve(process.cwd(), 'data');
 
 let cache: Record<string, unknown> | undefined;
 let lastCacheUpdate = 0;
@@ -27,7 +27,7 @@ async function _read(uid: string): Promise<Record<string, unknown>> {
 		return cache;
 	}
 
-	const dataFile = path.resolve(process.cwd(), `${uid}.json`);
+	const dataFile = path.resolve(dataFolder, `${uid}.json`);
 
 	try {
 		const raw = await fs.readFile(dataFile, 'utf8');
@@ -52,7 +52,7 @@ async function _read(uid: string): Promise<Record<string, unknown>> {
  * @param data the data to write
  */
 async function _write(data: Record<string, unknown>, uid: string): Promise<void> {
-	const dataFile = path.resolve(process.cwd(), `${uid}.json`);
+	const dataFile = path.resolve(dataFolder, `${uid}.json`);
 
 	try {
 		const json = JSON.stringify(data, null, 2);
@@ -223,4 +223,20 @@ export async function getAllKeyPaths(uid: string, object?: Record<string, unknow
 	}
 
 	return paths;
+}
+
+export async function getUids(): Promise<string[]> {
+	const uids: string[] = [];
+
+	try {
+		const files = await fs.readdir(dataFolder);
+
+		files.forEach((file) => {
+			uids.push(path.parse(file).name);
+		});
+	} catch (err) {
+		console.error('Failed to read directory:', err);
+	}
+
+	return uids;
 }
