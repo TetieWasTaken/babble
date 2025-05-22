@@ -72,7 +72,7 @@ export async function startCli() {
 					name: 'existing',
 					value: true,
 					description: 'Chooses an existing database to use',
-					disabled: (uidList.data.uids?.length ?? 0) > 0,
+					disabled: (uidList.data.uids?.length ?? 0) === 0,
 				},
 				new Separator(),
 				{ name: 'new', value: false, description: 'Exits the CLI and shuts down the server' },
