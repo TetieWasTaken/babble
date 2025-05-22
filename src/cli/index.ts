@@ -55,47 +55,47 @@ export async function startCli() {
 
 	console.log('\x1b[1;91m BABBLE \x1b[0;32mv1.0.0 \x1b[0m');
 
-	/* eslint-disable no-await-in-loop */
-	while (!exit) {
-		const uidResponse = await sendRequest('uid', Method.GET);
-		if (!uidResponse.ok) {
-			console.error(uidResponse);
-			return;
-		}
+	const uidResponse = await sendRequest('uid', Method.GET);
+	if (!uidResponse.ok) {
+		console.error(uidResponse);
+		return;
+	}
 
-		const uidList = (await uidResponse.json()) as RequestResult;
+	const uidList = (await uidResponse.json()) as RequestResult;
 
-		const isExisting = await select({
-			message: 'Use an existing database, or choose a new one:',
-			choices: [
-				{
-					name: 'existing',
-					value: true,
-					description: 'Chooses an existing database to use',
-					disabled: (uidList.data.uids?.length ?? 0) === 0,
-				},
-				new Separator(),
-				{ name: 'new', value: false, description: 'Exits the CLI and shuts down the server' },
-			],
-			instructions,
+	const isExisting = await select({
+		message: 'Use an existing database, or choose a new one:',
+		choices: [
+			{
+				name: 'existing',
+				value: true,
+				description: 'Chooses an existing database to use',
+				disabled: (uidList.data.uids?.length ?? 0) === 0,
+			},
+			new Separator(),
+			{ name: 'new', value: false, description: 'Exits the CLI and shuts down the server' },
+		],
+		instructions,
+		theme,
+	});
+
+	let uid: string;
+
+	if (isExisting) {
+		uid = await search({
+			message: 'Database uid:',
+			async source(input, { signal }) {
+				return getAutocomplete(input, uidList.data.uids ?? []);
+			},
 			theme,
 		});
+	} else {
+		console.log('Not implemented yet.');
+		return;
+	}
 
-		let uid: string;
-
-		if (isExisting) {
-			uid = await search({
-				message: 'Database uid:',
-				async source(input, { signal }) {
-					return getAutocomplete(input, uidList.data.uids ?? []);
-				},
-				theme,
-			});
-		} else {
-			console.log('Not implemented yet.');
-			return;
-		}
-
+	/* eslint-disable no-await-in-loop */
+	while (!exit) {
 		const action = await select({
 			message: 'Choose an action:',
 			choices: [
