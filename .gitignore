@@ -133,4 +133,4 @@ dist
 .DS_Store
 
 # Database
-data/db.json
+data/

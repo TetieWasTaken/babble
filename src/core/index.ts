@@ -240,3 +240,13 @@ export async function getUids(): Promise<string[]> {
 
 	return uids;
 }
+
+export async function createNew(uid: string): Promise<string> {
+	try {
+		await fs.writeFile(path.resolve(dataFolder, `${uid}.json`), JSON.stringify({}), 'utf8');
+	} catch (err) {
+		console.error('Failed to create file:', err);
+	}
+
+	return uid;
+}

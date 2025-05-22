@@ -30,9 +30,13 @@ async function sendRequest(path: string, method: Method, body?: Record<string, u
 	const url = `http://localhost:6363/server/${path}`;
 
 	const result = await fetch(url, {
-		method: method,
-		headers: { 'Content-Type': 'application/json' },
-		body: body ? JSON.stringify(body) : method === Method.DELETE ? '{}' : undefined,
+		method,
+		...(body
+			? {
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(body),
+				}
+			: {}),
 	});
 
 	return result;
@@ -72,7 +76,6 @@ export async function startCli() {
 				description: 'Chooses an existing database to use',
 				disabled: (uidList.data.uids?.length ?? 0) === 0,
 			},
-			new Separator(),
 			{ name: 'new', value: false, description: 'Exits the CLI and shuts down the server' },
 		],
 		instructions,
@@ -90,8 +93,16 @@ export async function startCli() {
 			theme,
 		});
 	} else {
-		console.log('Not implemented yet.');
-		return;
+		const newUid = await input({ message: 'New database uid:' });
+
+		const result = await sendRequest(`new/${newUid}`, Method.POST);
+		if (!result.ok) {
+			console.error(result);
+			return;
+		}
+
+		const jsonResult = (await result.json()) as RequestResult;
+		uid = jsonResult.data.key;
 	}
 
 	/* eslint-disable no-await-in-loop */
@@ -144,6 +155,7 @@ export async function startCli() {
 					console.error(result);
 					return;
 				}
+
 				existing = (await result.json()) as RequestResult;
 			}
 

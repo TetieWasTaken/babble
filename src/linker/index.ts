@@ -9,7 +9,7 @@ import { startServer } from '../server/index.js';
 import { startCli } from '../cli/index.js';
 import logger from './logger.js';
 
-export { add, fetch, modify, remove, getUids } from '../core/index.js';
+export { add, fetch, modify, remove, getUids, createNew } from '../core/index.js';
 
 logger.warn('Starting server');
 const fastify = await startServer().catch((error: unknown) => {
