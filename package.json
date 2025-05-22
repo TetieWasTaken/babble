@@ -8,7 +8,7 @@
 		"build": "tsc",
 		"start": "node dist/linker/index.js",
 		"dev": "yarn run build && yarn run start",
-		"lint": "xo . --fix",
+		"lint": "xo . --fix --prettier=true",
 		"format": "prettier . --write"
 	},
 	"author": "TetieWasTaken",

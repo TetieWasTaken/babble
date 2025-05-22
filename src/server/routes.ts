@@ -12,12 +12,12 @@ export enum Method {
 	POST = 'POST',
 }
 
-type ParamRequest = { Params: { uid: string; '*': string } };
+type ParameterRequest = { Params: { uid: string; '*': string } };
 
 type Route = {
 	method: Method;
 	url: string;
-	handler: (request: FastifyRequest<ParamRequest>, reply: FastifyReply) => void;
+	handler: (request: FastifyRequest<ParameterRequest>, reply: FastifyReply) => void;
 };
 
 const routes: Route[] = [
@@ -35,9 +35,9 @@ const routes: Route[] = [
 					data: { key, document: created },
 					meta: { timestamp: new Date() },
 				});
-			} catch (err) {
+			} catch (error) {
 				return reply.code(500).send({
-					errors: [{ code: 'failed', message: err.message }],
+					errors: [{ code: 'failed', message: error.message }],
 				});
 			}
 		},
@@ -61,9 +61,9 @@ const routes: Route[] = [
 					data: { key, document: result },
 					meta: { timestamp: new Date() },
 				});
-			} catch (err) {
+			} catch (error) {
 				return reply.code(500).send({
-					errors: [{ code: 'failed', message: err.message }],
+					errors: [{ code: 'failed', message: error.message }],
 				});
 			}
 		},
@@ -82,9 +82,9 @@ const routes: Route[] = [
 					data: { key, document: updated },
 					meta: { timestamp: new Date() },
 				});
-			} catch (err) {
+			} catch (error) {
 				return reply.code(500).send({
-					errors: [{ code: 'failed', message: err.message }],
+					errors: [{ code: 'failed', message: error.message }],
 				});
 			}
 		},
@@ -99,9 +99,9 @@ const routes: Route[] = [
 			try {
 				await remove(key, uid);
 				return reply.code(200).send({ data: { key }, meta: { timestamp: new Date() } });
-			} catch (err) {
+			} catch (error) {
 				return reply.code(500).send({
-					errors: [{ code: 'failed', message: err.message }],
+					errors: [{ code: 'failed', message: error.message }],
 				});
 			}
 		},
@@ -113,9 +113,9 @@ const routes: Route[] = [
 			try {
 				const uids = await getUids();
 				return reply.code(200).send({ data: { uids }, meta: { timestamp: new Date() } });
-			} catch (err) {
+			} catch (error) {
 				return reply.code(500).send({
-					errors: [{ code: 'failed', message: err.message }],
+					errors: [{ code: 'failed', message: error.message }],
 				});
 			}
 		},
@@ -129,9 +129,9 @@ const routes: Route[] = [
 			try {
 				const created = await createNew(uid);
 				return reply.code(201).send({ data: { key: created }, meta: { timestamp: new Date() } });
-			} catch (err) {
+			} catch (error) {
 				return reply.code(500).send({
-					errors: [{ code: 'failed', message: err.message }],
+					errors: [{ code: 'failed', message: error.message }],
 				});
 			}
 		},

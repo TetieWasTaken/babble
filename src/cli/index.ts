@@ -31,12 +31,12 @@ async function sendRequest(path: string, method: Method, body?: Record<string, u
 
 	const result = await fetch(url, {
 		method,
-		...(body !== undefined
-			? {
+		...(body === undefined
+			? {}
+			: {
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify(body),
-				}
-			: {}),
+				}),
 	});
 
 	return result;
@@ -57,7 +57,7 @@ function getAutocomplete(input: string | undefined, options: string[]) {
 export async function startCli() {
 	let exit = false;
 
-	console.log('\x1b[1;91m BABBLE \x1b[0;32mv1.0.0 \x1b[0m');
+	console.log('\u001B[1;91m BABBLE \u001B[0;32mv1.0.0 \u001B[0m');
 
 	const uidResponse = await sendRequest('uid', Method.GET);
 	if (!uidResponse.ok) {
@@ -174,10 +174,11 @@ export async function startCli() {
 		}
 
 		const result = await sendRequest(`${uid}/${action}/${key}`, methodMap[action], body);
-		if (!result.ok) console.error('→', result);
-		else {
+		if (result.ok) {
 			const resultJson = (await result.json()) as RequestResult;
 			console.log('→', resultJson.data.document ?? `${resultJson.data.key} removed`);
+		} else {
+			console.error('→', result);
 		}
 	}
 

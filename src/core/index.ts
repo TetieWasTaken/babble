@@ -231,11 +231,11 @@ export async function getUids(): Promise<string[]> {
 	try {
 		const files = await fs.readdir(dataFolder);
 
-		files.forEach((file) => {
+		for (const file of files) {
 			uids.push(path.parse(file).name);
-		});
-	} catch (err) {
-		console.error('Failed to read directory:', err);
+		}
+	} catch (error) {
+		console.error('Failed to read directory:', error);
 	}
 
 	return uids;
@@ -244,8 +244,8 @@ export async function getUids(): Promise<string[]> {
 export async function createNew(uid: string): Promise<string> {
 	try {
 		await fs.writeFile(path.resolve(dataFolder, `${uid}.json`), JSON.stringify({}), 'utf8');
-	} catch (err) {
-		console.error('Failed to create file:', err);
+	} catch (error) {
+		console.error('Failed to create file:', error);
 	}
 
 	return uid;
