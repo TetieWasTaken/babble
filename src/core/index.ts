@@ -247,3 +247,7 @@ export async function createNew(uid: string): Promise<string> {
 
 	return uid;
 }
+
+export async function fetchAll(uid: string): Promise<Record<string, unknown>> {
+	return await _read(uid);
+}
