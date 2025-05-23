@@ -222,6 +222,10 @@ export async function getAllKeyPaths(uid: string, object?: Record<string, unknow
 	return paths;
 }
 
+/**
+ * Get all current databases
+ * @returns the Uids of every database
+ */
 export async function getUids(): Promise<string[]> {
 	const uids: string[] = [];
 
@@ -238,6 +242,11 @@ export async function getUids(): Promise<string[]> {
 	return uids;
 }
 
+/**
+ * Creates a new database
+ * @param uid the uid of the database to create
+ * @returns the uid of the database that was created, if successful
+ */
 export async function createNew(uid: string): Promise<string> {
 	try {
 		await fs.writeFile(path.resolve(dataFolder, `${uid}.json`), JSON.stringify({}), 'utf8');
@@ -248,6 +257,11 @@ export async function createNew(uid: string): Promise<string> {
 	return uid;
 }
 
+/**
+ * Fetches a whole database
+ * @param uid the uid of the database to fetch
+ * @returns the entire database
+ */
 export async function fetchAll(uid: string): Promise<Record<string, unknown>> {
 	return await _read(uid);
 }
