@@ -80,7 +80,7 @@ export async function startCli(): Promise<'exit' | undefined> {
 
 	console.log('\u001B[1;91m BABBLE \u001B[0;32mv1.0.0 \u001B[0m');
 
-	// fetch the list of existing database UIDs
+	// Fetch the list of existing database UIDs
 	const uidResponse = await sendRequest('uid', Method.GET);
 	if (!uidResponse.ok) {
 		console.error(uidResponse);
@@ -107,7 +107,7 @@ export async function startCli(): Promise<'exit' | undefined> {
 	let uid: string;
 
 	if (isExisting) {
-		// use an existing database
+		// Use an existing database
 
 		uid = await search({
 			message: 'Database uid:',
@@ -117,7 +117,7 @@ export async function startCli(): Promise<'exit' | undefined> {
 			theme,
 		});
 	} else {
-		// create a new database
+		// Create a new database
 
 		const newUid = await input({ message: 'New database uid:' });
 
