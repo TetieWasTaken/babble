@@ -17,9 +17,7 @@ export const job = CronJob.from({
 	onTick: async function () {
 		logger.warn('Generating backup...');
 		const uids = await getUids();
-		uids.forEach(function (item, _) {
-			createCopy(item);
-		});
+		await Promise.all(uids.map((uid) => createCopy(uid)));
 	},
 	start: true,
 	timeZone: 'Europe/Amsterdam',

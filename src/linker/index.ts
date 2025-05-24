@@ -33,9 +33,10 @@ process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
 logger.warn('Starting CLI');
-await startCli().catch(async (error: unknown) => {
+const result = await startCli().catch(async (error: unknown) => {
 	if (error instanceof Error && error.message.includes('User force closed the prompt')) {
 		await shutdown();
+		return 'exit';
 	} else {
 		logger.error(error);
 
@@ -46,5 +47,9 @@ await startCli().catch(async (error: unknown) => {
 		throw new Error(String(error));
 	}
 });
+
+if (result === 'exit') {
+	await shutdown();
+}
 
 await fastify.close();

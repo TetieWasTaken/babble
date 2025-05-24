@@ -54,7 +54,7 @@ function getAutocomplete(input: string | undefined, options: string[]) {
 		.map((item) => item.key);
 }
 
-export async function startCli() {
+export async function startCli(): Promise<'exit' | undefined> {
 	let exit = false;
 
 	console.log('\u001B[1;91m BABBLE \u001B[0;32mv1.0.0 \u001B[0m');
@@ -183,4 +183,6 @@ export async function startCli() {
 	}
 
 	/* eslint-enable no-await-in-loop */
+
+	return 'exit';
 }
