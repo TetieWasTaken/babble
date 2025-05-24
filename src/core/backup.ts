@@ -15,17 +15,33 @@ async function _write(data: Record<string, unknown>, uid: string): Promise<void>
 
 	try {
 		await fs.access(backupPath);
-	} catch (err) {
+	} catch {
 		try {
-			await fs.mkdir(backupPath);
+			await fs.mkdir(backupPath, { recursive: true });
 		} catch (err) {
-			logger.error(err);
+			logger.error('Failed to create backup directory:', err);
+			return;
 		}
-
-		logger.error(err);
 	}
 
-	const dataFile = path.resolve(backupFolder, `${uid}/${new Date().toISOString()}.json`);
+	try {
+		const files = await fs.readdir(backupPath);
+		const now = Date.now();
+		const threshold = 3 * 24 * 60 * 60 * 1000; // three days
+
+		for (const file of files) {
+			if (file.endsWith('.json')) {
+				const timestamp = Date.parse(file.replace('.json', ''));
+				if (!isNaN(timestamp) && now - timestamp > threshold) {
+					await fs.unlink(path.resolve(backupPath, file));
+				}
+			}
+		}
+	} catch (err) {
+		logger.error('Failed to clean up old backups:', err);
+	}
+
+	const dataFile = path.resolve(backupPath, `${new Date().toISOString()}.json`);
 
 	try {
 		const json = JSON.stringify(data, null, 2);
