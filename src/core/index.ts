@@ -13,7 +13,7 @@ import { CronJob } from 'cron';
 import { createCopy } from './backup.js';
 
 export const job = CronJob.from({
-	cronTime: '* * * * *', // 0 0 * * *
+	cronTime: '0 */6 * * *',
 	onTick: async function () {
 		logger.warn('Generating backup...');
 		const uids = await getUids();
