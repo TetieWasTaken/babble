@@ -1,5 +1,5 @@
 import { select, editor, search, input, Separator } from '@inquirer/prompts';
-import fetch from 'node-fetch';
+import fetch, { type Response } from 'node-fetch';
 import { distance } from 'fastest-levenshtein';
 import { Method } from '../server/routes.js';
 import { getAllKeyPaths } from '../core/index.js';
@@ -26,8 +26,19 @@ const theme = {
 	helpMode: 'always' as const,
 };
 
-async function sendRequest(path: string, method: Method, body?: Record<string, unknown> | undefined) {
-	const url = `http://localhost:6363/server/${path}`;
+/**
+ * Sends an HTTP request to the babble server
+ * @param endpoint the endpoint path to use `(/server/${endpoint})`
+ * @param method the {@link Method} to use
+ * @param body the body to send
+ * @returns the result of the request
+ */
+async function sendRequest(
+	endpoint: string,
+	method: Method,
+	body?: Record<string, unknown> | undefined,
+): Promise<Response> {
+	const url = `http://localhost:6363/server/${endpoint}`;
 
 	const result = await fetch(url, {
 		method,
@@ -42,6 +53,12 @@ async function sendRequest(path: string, method: Method, body?: Record<string, u
 	return result;
 }
 
+/**
+ * Filters and sorts options based on a given input string
+ * @param input the input string
+ * @param options an array of the possible options
+ * @returns a list of best-matching options
+ */
 function getAutocomplete(input: string | undefined, options: string[]) {
 	if (!input || input.length < 2) {
 		return [];
@@ -54,11 +71,16 @@ function getAutocomplete(input: string | undefined, options: string[]) {
 		.map((item) => item.key);
 }
 
+/**
+ * Starts the CLI loop
+ * @returns if the user exitted manually, 'exit'. Else, nothing.
+ */
 export async function startCli(): Promise<'exit' | undefined> {
 	let exit = false;
 
 	console.log('\u001B[1;91m BABBLE \u001B[0;32mv1.0.0 \u001B[0m');
 
+	// fetch the list of existing database UIDs
 	const uidResponse = await sendRequest('uid', Method.GET);
 	if (!uidResponse.ok) {
 		console.error(uidResponse);
@@ -73,10 +95,10 @@ export async function startCli(): Promise<'exit' | undefined> {
 			{
 				name: 'existing',
 				value: true,
-				description: 'Chooses an existing database to use',
-				disabled: (uidList.data.uids?.length ?? 0) === 0,
+				description: 'Choose an existing database',
+				disabled: (uidList.data.uids?.length ?? 0) === 0 ? '(no database was found)' : false,
 			},
-			{ name: 'new', value: false, description: 'Exits the CLI and shuts down the server' },
+			{ name: 'new', value: false, description: 'Create a new database' },
 		],
 		instructions,
 		theme,
@@ -85,6 +107,8 @@ export async function startCli(): Promise<'exit' | undefined> {
 	let uid: string;
 
 	if (isExisting) {
+		// use an existing database
+
 		uid = await search({
 			message: 'Database uid:',
 			async source(input, { signal }) {
@@ -93,6 +117,8 @@ export async function startCli(): Promise<'exit' | undefined> {
 			theme,
 		});
 	} else {
+		// create a new database
+
 		const newUid = await input({ message: 'New database uid:' });
 
 		const result = await sendRequest(`new/${newUid}`, Method.POST);
