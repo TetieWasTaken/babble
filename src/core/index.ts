@@ -9,11 +9,25 @@ import path from 'node:path';
 import process from 'node:process';
 import writeFileAtomic from 'write-file-atomic';
 import logger from '../linker/logger.js';
+import { CronJob } from 'cron';
+import { createCopy } from './backup.js';
+
+export const job = CronJob.from({
+	cronTime: '* * * * *', // 0 0 * * *
+	onTick: async function () {
+		logger.warn('Generating backup...');
+		const uids = await getUids();
+		uids.forEach(function (item, _) {
+			createCopy(item);
+		});
+	},
+	start: true,
+	timeZone: 'Europe/Amsterdam',
+});
 
 const dataFolder = path.resolve(process.cwd(), 'data');
 
 const cache = new Map<string, { data: Record<string, unknown>; lastUpdate: number }>();
-let lastCacheUpdate = 0;
 const timeToLive = 60_000;
 
 /**

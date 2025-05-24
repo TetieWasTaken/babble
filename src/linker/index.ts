@@ -8,6 +8,7 @@ import process from 'node:process';
 import { startServer } from '../server/index.js';
 import { startCli } from '../cli/index.js';
 import logger from './logger.js';
+import { job } from '../core/index.js';
 
 export { add, fetch, modify, remove, getUids, createNew, fetchAll } from '../core/index.js';
 
@@ -24,6 +25,7 @@ const fastify = await startServer().catch((error: unknown) => {
 
 const shutdown = async () => {
 	logger.warn('Received shutdown signal');
+	job.stop();
 	await fastify.close();
 };
 
