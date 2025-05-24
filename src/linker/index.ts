@@ -7,8 +7,8 @@
 import process from 'node:process';
 import { startServer } from '../server/index.js';
 import { startCli } from '../cli/index.js';
-import logger from './logger.js';
 import { job } from '../core/index.js';
+import logger from './logger.js';
 
 export { add, fetch, modify, remove, getUids, createNew, fetchAll } from '../core/index.js';
 
@@ -25,7 +25,7 @@ const fastify = await startServer().catch((error: unknown) => {
 
 const shutdown = async () => {
 	logger.warn('Received shutdown signal');
-	job.stop();
+	await job.stop();
 	await fastify.close();
 };
 
@@ -37,15 +37,15 @@ const result = await startCli().catch(async (error: unknown) => {
 	if (error instanceof Error && error.message.includes('User force closed the prompt')) {
 		await shutdown();
 		return 'exit';
-	} else {
-		logger.error(error);
-
-		if (error instanceof Error) {
-			throw new TypeError(error.message);
-		}
-
-		throw new Error(String(error));
 	}
+
+	logger.error(error);
+
+	if (error instanceof Error) {
+		throw new TypeError(error.message);
+	}
+
+	throw new Error(String(error));
 });
 
 if (result === 'exit') {

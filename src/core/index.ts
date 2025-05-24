@@ -8,16 +8,16 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import writeFileAtomic from 'write-file-atomic';
-import logger from '../linker/logger.js';
 import { CronJob } from 'cron';
+import logger from '../linker/logger.js';
 import { createCopy } from './backup.js';
 
 export const job = CronJob.from({
 	cronTime: '0 */6 * * *',
-	onTick: async function () {
+	async onTick() {
 		logger.warn('Generating backup...');
 		const uids = await getUids();
-		await Promise.all(uids.map((uid) => createCopy(uid)));
+		await Promise.all(uids.map(async (uid) => createCopy(uid)));
 	},
 	start: true,
 	timeZone: 'Europe/Amsterdam',
@@ -275,5 +275,5 @@ export async function createNew(uid: string): Promise<string> {
  * @returns the entire database
  */
 export async function fetchAll(uid: string): Promise<Record<string, unknown>> {
-	return await _read(uid);
+	return _read(uid);
 }
