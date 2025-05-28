@@ -4,6 +4,7 @@ import { distance } from 'fastest-levenshtein';
 import { Method } from '../server/routes.js';
 import { startRepl } from './repl.js';
 import { startInquiry } from './inquiry.js';
+import { encryptPassword } from './auth.js';
 
 export type RequestResult = {
 	status: string;
@@ -108,8 +109,15 @@ export async function startCli(): Promise<'exit' | undefined> {
 		// Create a new database
 
 		const newUid = await input({ message: 'New database uid:' });
+		let password = await input({ message: 'Enter authentication password, if any (none): ' });
 
-		const result = await sendRequest(`new/${newUid}`, Method.POST);
+		let encrypted: string | null = null;
+
+		if (password !== '') {
+			encrypted = await encryptPassword(password);
+		}
+
+		const result = await sendRequest(`new/${newUid}`, Method.POST, { password: encrypted });
 		if (!result.ok) {
 			console.error(result);
 			return;
