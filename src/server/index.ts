@@ -10,8 +10,10 @@
 import fastifyFactory from 'fastify';
 import logger from '../linker/logger.js';
 import routes from './routes.js';
+import { generateKeys } from './key.js';
 
 export async function startServer() {
+	generateKeys();
 	const fastify = fastifyFactory({ loggerInstance: logger });
 
 	for (const route of routes) {
