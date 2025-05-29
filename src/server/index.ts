@@ -13,7 +13,10 @@ import routes from './routes.js';
 import { generateKeys } from './key.js';
 
 export async function startServer() {
+	logger.info('Generating new keys');
 	generateKeys();
+
+	logger.info('Initialising Fastify');
 	const fastify = fastifyFactory({ loggerInstance: logger });
 
 	for (const route of routes) {
@@ -21,6 +24,7 @@ export async function startServer() {
 	}
 
 	try {
+		logger.info('Listening on 6363');
 		await fastify.listen({ port: 6363 });
 	} catch (error: unknown) {
 		fastify.log.error(error);

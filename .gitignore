@@ -135,4 +135,4 @@ dist
 # Database
 data/
 backups/
-keys/
+auth/

@@ -9,7 +9,6 @@ import { startServer } from '../server/index.js';
 import { startCli } from '../cli/index.js';
 import { job } from '../core/index.js';
 import logger from './logger.js';
-import { startRepl } from '../cli/repl.js';
 
 export { add, fetch, modify, remove, getUids, createNew, fetchAll } from '../core/index.js';
 
