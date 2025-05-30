@@ -35,9 +35,10 @@ export async function storePassword(password: string, uid: string) {
 
 	const privPem = readFileSync(join(passDir, 'private.pem'), 'utf8');
 	const buffer = Buffer.from(password, 'base64');
-	const decrypted = privateDecrypt({ key: privPem, padding: constants.RSA_PKCS1_OAEP_PADDING }, buffer).toString(
-		'utf8',
-	);
+	const decrypted = privateDecrypt(
+		{ key: privPem, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: 'sha256' },
+		buffer,
+	).toString('utf8');
 
 	const hash = await bcrypt.hash(decrypted, 12);
 	writeFileSync(join(passDir, `${uid}.hash`), hash, 'utf8');
