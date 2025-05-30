@@ -33,7 +33,7 @@ export async function storePassword(password: string, uid: string) {
 		logger.info(`Created directory: ${passDir}`);
 	}
 
-	const privPem = readFileSync(join(passDir, 'private.pem'), 'utf8');
+	const privPem = readFileSync(join(keyDir, 'private.pem'), 'utf8');
 	const buffer = Buffer.from(password, 'base64');
 	const decrypted = privateDecrypt(
 		{ key: privPem, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: 'sha256' },
