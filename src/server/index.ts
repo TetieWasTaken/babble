@@ -10,7 +10,7 @@
 import fastifyFactory from 'fastify';
 import logger from '../linker/logger.js';
 import routes from './routes.js';
-import { generateKeys } from './key.js';
+import { generateKeys, verifyPassword } from './key.js';
 
 export async function startServer() {
 	logger.info('Generating new keys');
@@ -18,6 +18,8 @@ export async function startServer() {
 
 	logger.info('Initialising Fastify');
 	const fastify = fastifyFactory({ loggerInstance: logger });
+
+	await fastify.register(verifyPassword);
 
 	for (const route of routes) {
 		fastify.route(route);
