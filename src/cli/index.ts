@@ -35,6 +35,8 @@ export function getAutocomplete(input: string | undefined, options: string[]) {
 		.map((item) => item.key);
 }
 
+let selectedPassword: string | null = null;
+
 /**
  * Sends an HTTP request to the babble server
  * @param endpoint the endpoint path to use `(/server/${endpoint})`
@@ -47,16 +49,18 @@ export async function sendRequest(
 	method: Method,
 	body?: Record<string, unknown> | undefined,
 ): Promise<Response> {
+	const headers: Record<string, string> = {};
+	if (body !== undefined) headers['Content-Type'] = 'application/json';
+	if (selectedPassword) {
+		headers['X-Password'] = selectedPassword;
+	}
+
 	const url = `http://localhost:6363/server/${endpoint}`;
 
 	const result = await fetch(url, {
 		method,
-		...(body === undefined
-			? {}
-			: {
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(body),
-				}),
+		headers,
+		body: body === undefined ? undefined : JSON.stringify(body),
 	});
 
 	return result;
@@ -105,11 +109,16 @@ export async function startCli(): Promise<'exit' | undefined> {
 			},
 			theme,
 		});
+
+		const password = await input({ message: 'Enter authentication password, if any:' });
+		if (password !== '') {
+			selectedPassword = await encryptPassword(password);
+		}
 	} else {
 		// Create a new database
 
 		const newUid = await input({ message: 'New database uid:' });
-		let password = await input({ message: 'Enter authentication password, if any (none): ' });
+		let password = await input({ message: 'Enter authentication password, if any:' });
 
 		let encrypted: string | null = null;
 
@@ -122,6 +131,8 @@ export async function startCli(): Promise<'exit' | undefined> {
 			console.error(result);
 			return;
 		}
+
+		selectedPassword = encrypted;
 
 		const jsonResult = (await result.json()) as RequestResult;
 		uid = jsonResult.data.key;
