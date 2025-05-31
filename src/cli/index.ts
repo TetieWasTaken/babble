@@ -111,7 +111,7 @@ export async function startCli(): Promise<'exit' | undefined> {
 		});
 
 		const password = await input({ message: 'Enter authentication password, if any:' });
-		if (password !== '') {
+		if (password !== null) {
 			selectedPassword = await encryptPassword(password);
 		}
 	} else {
@@ -122,7 +122,7 @@ export async function startCli(): Promise<'exit' | undefined> {
 
 		let encrypted: string | null = null;
 
-		if (password !== '') {
+		if (password !== null) {
 			encrypted = await encryptPassword(password);
 		}
 
