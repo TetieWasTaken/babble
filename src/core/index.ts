@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-import { promises as fs } from 'node:fs';
+import { existsSync, promises as fs, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import writeFileAtomic from 'write-file-atomic';
@@ -260,6 +260,11 @@ export async function getUids(): Promise<string[]> {
  * @returns the uid of the database that was created, if successful
  */
 export async function createNew(uid: string): Promise<string> {
+	if (!existsSync(dataFolder)) {
+		mkdirSync(dataFolder, { recursive: true });
+		logger.info(`Created directory: ${dataFolder}`);
+	}
+
 	try {
 		await fs.writeFile(path.resolve(dataFolder, `${uid}.json`), JSON.stringify({}), 'utf8');
 	} catch (error) {
