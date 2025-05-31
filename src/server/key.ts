@@ -62,7 +62,10 @@ export const verifyPassword = fastifyPlugin(async (fastify) => {
 		let decrypted: string;
 		try {
 			const buffer = Buffer.from(encrypted, 'base64');
-			decrypted = privateDecrypt({ key: privPem, padding: constants.RSA_PKCS1_OAEP_PADDING }, buffer).toString('utf8');
+			decrypted = privateDecrypt(
+				{ key: privPem, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: 'sha256' },
+				buffer,
+			).toString('utf8');
 		} catch {
 			return reply.code(400).send({ error: 'Invalid password blob' });
 		}
