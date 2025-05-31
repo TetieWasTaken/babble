@@ -1,6 +1,6 @@
 import readline from 'node:readline';
 import fetch, { type Response } from 'node-fetch';
-import { RequestResult } from './index.js';
+import { RequestResult, sendRequest } from './index.js';
 
 enum Method {
 	GET = 'GET',
@@ -19,24 +19,6 @@ const methodMap = {
 	modify: Method.PATCH,
 	remove: Method.DELETE,
 } as const;
-
-async function sendRequest(
-	uid: string,
-	action: keyof typeof methodMap,
-	key: string,
-	body?: Record<string, unknown>,
-): Promise<Response> {
-	const url = `http://localhost:6363/server/${uid}/${action}/${key}`;
-	return fetch(url, {
-		method: methodMap[action],
-		...(body
-			? {
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(body),
-				}
-			: {}),
-	});
-}
 
 export async function startRepl(uid: string): Promise<'exit' | undefined> {
 	return new Promise((resolve) => {
@@ -91,7 +73,7 @@ Available commands:
 							break;
 						}
 						{
-							const res = await sendRequest(uid, cmd, key, body);
+							const res = await sendRequest(`${uid}/${cmd}/${key}`, methodMap[cmd], body);
 							if (res.ok) {
 								const j = (await res.json()) as RequestResult;
 								console.log('✅', j.data.document);
@@ -108,7 +90,7 @@ Available commands:
 							break;
 						}
 						{
-							const res = await sendRequest(uid, cmd, key);
+							const res = await sendRequest(`${uid}/${cmd}/${key}`, methodMap[cmd]);
 							if (res.ok) {
 								const j = (await res.json()) as RequestResult;
 								console.log(cmd === 'remove' ? `✅ ${j.data.key} removed` : j.data.document);
