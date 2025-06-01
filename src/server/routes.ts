@@ -1,6 +1,7 @@
 import { type FastifyRequest, type FastifyReply } from 'fastify';
 import { add, fetch, modify, remove, getUids, createNew, fetchAll } from '../linker/index.js';
 import { getPubKey, storePassword } from './key.js';
+import { writeAll } from '../core/index.js';
 
 export enum Method {
 	GET = 'GET',
@@ -160,6 +161,25 @@ const routes: Route[] = [
 			try {
 				const data = await fetchAll(uid);
 				return await reply.code(201).send({ data: { document: data }, meta: { timestamp: new Date() } });
+			} catch (error) {
+				const message = error instanceof Error ? error.message : 'Unknown error';
+
+				return reply.code(500).send({
+					errors: [{ code: 'failed', message }],
+				});
+			}
+		},
+	},
+	{
+		method: Method.POST,
+		url: '/server/:uid/import',
+		async handler(request, reply) {
+			const uid = request.params.uid;
+			const content = request.body as Record<string, unknown>;
+
+			try {
+				const result = await writeAll(uid, content);
+				return await reply.code(201).send({ data: { document: result }, meta: { timestamp: new Date() } });
 			} catch (error) {
 				const message = error instanceof Error ? error.message : 'Unknown error';
 

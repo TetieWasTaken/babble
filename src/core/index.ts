@@ -61,7 +61,7 @@ async function _read(uid: string): Promise<Record<string, unknown>> {
  * Overwrites the database
  * @param data the data to write
  */
-async function _write(data: Record<string, unknown>, uid: string): Promise<void> {
+async function _write(data: Record<string, unknown>, uid: string): Promise<Record<string, unknown>> {
 	const dataFile = path.resolve(dataFolder, `${uid}.json`);
 
 	try {
@@ -69,8 +69,11 @@ async function _write(data: Record<string, unknown>, uid: string): Promise<void>
 		await writeFileAtomic(dataFile, json, 'utf8');
 
 		cache.set(uid, { data, lastUpdate: Date.now() });
+
+		return data;
 	} catch (error) {
 		logger.error('Failed to write DB:', error);
+		return {};
 	}
 }
 
@@ -281,4 +284,14 @@ export async function createNew(uid: string): Promise<string> {
  */
 export async function fetchAll(uid: string): Promise<Record<string, unknown>> {
 	return _read(uid);
+}
+
+/**
+ * Writes a whole database
+ * @param uid the uid of the database to write to
+ * @param content the data to write
+ * @returns the written data
+ */
+export async function writeAll(uid: string, content: Record<string, unknown>): Promise<Record<string, unknown>> {
+	return await _write(content, uid);
 }
