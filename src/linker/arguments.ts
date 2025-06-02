@@ -9,7 +9,6 @@ export enum Argtype {
 program
 	.helpOption(false)
 	.helpCommand(false)
-	.option('--first')
 	.option('-s, --server', 'run babble in server-only mode (no CLI)')
 	.option('-h, --help', 'display help for command');
 
