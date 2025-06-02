@@ -3,7 +3,7 @@ import path from 'node:path';
 import { pino } from 'pino';
 
 const logFile = path.resolve(process.cwd(), 'logs.log');
-
-const logger = pino({}, pino.destination(logFile));
+const destination = pino.destination({ dest: logFile, append: true, sync: true });
+const logger = pino({}, destination);
 
 export default logger;
