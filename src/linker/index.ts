@@ -9,11 +9,29 @@ import { startServer } from '../server/index.js';
 import { startCli } from '../cli/index.js';
 import { job } from '../core/index.js';
 import logger from './logger.js';
+import { Argtype, startCommander } from './arguments.js';
+import { FastifyInstance } from 'fastify';
 
 export { add, fetch, modify, remove, getUids, createNew, fetchAll } from '../core/index.js';
 
+let fastify: FastifyInstance;
+
+logger.info('start');
+const shutdown = async () => {
+	logger.warn('Received shutdown signal');
+	if (job) await job.stop();
+	if (fastify) await fastify.close();
+};
+
+logger.warn('Starting commander');
+const commanderResult = await startCommander();
+if (commanderResult == Argtype.EXIT) {
+	await shutdown();
+	process.exit(0);
+}
+
 logger.warn('Starting server');
-const fastify = await startServer().catch((error: unknown) => {
+fastify = await startServer().catch((error: unknown) => {
 	logger.error(error);
 
 	if (error instanceof Error) {
@@ -22,34 +40,26 @@ const fastify = await startServer().catch((error: unknown) => {
 
 	throw new Error(String(error));
 });
-
-const shutdown = async () => {
-	logger.warn('Received shutdown signal');
-	await job.stop();
-	await fastify.close();
-};
 
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
 logger.warn('Starting CLI');
-const result = await startCli().catch(async (error: unknown) => {
-	if (error instanceof Error && error.message.includes('User force closed the prompt')) {
-		await shutdown();
-		return 'exit';
-	}
+if (commanderResult !== Argtype.SERVER) {
+	await startCli().catch(async (error: unknown) => {
+		if (error instanceof Error && error.message.includes('User force closed the prompt')) {
+			await shutdown();
+			return 'exit';
+		}
 
-	logger.error(error);
+		logger.error(error);
 
-	if (error instanceof Error) {
-		throw new TypeError(error.message);
-	}
+		if (error instanceof Error) {
+			throw new TypeError(error.message);
+		}
 
-	throw new Error(String(error));
-});
+		throw new Error(String(error));
+	});
 
-if (result === 'exit') {
-	await shutdown();
+	shutdown();
 }
-
-await fastify.close();
