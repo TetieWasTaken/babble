@@ -207,6 +207,23 @@ export async function remove(path: string, uid: string) {
 }
 
 /**
+ * Deletes a database
+ * @param uid the database to delete
+ */
+export async function deleteData(uid: string) {
+	try {
+		const dataFile = path.resolve(dataFolder, `${uid}.json`);
+		const data = fetch('.', uid);
+		fs.unlink(dataFile);
+
+		return data;
+	} catch (error) {
+		logger.error(error);
+		throw new Error(error);
+	}
+}
+
+/**
  * Recursively collect all key paths in an object
  * @param obj the object to walk
  * @param prefix the current key prefix (slash-delimited)

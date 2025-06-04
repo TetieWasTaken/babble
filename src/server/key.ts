@@ -1,5 +1,5 @@
 import { constants, generateKeyPairSync, privateDecrypt } from 'node:crypto';
-import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'fs';
+import { mkdirSync, existsSync, readFileSync, writeFileSync, promises as fs } from 'fs';
 import { join } from 'path';
 import logger from '../linker/logger.js';
 import bcrypt from 'bcrypt';
@@ -77,3 +77,11 @@ export const verifyPassword = fastifyPlugin(async (fastify) => {
 		}
 	});
 });
+
+export async function destroyPassword(uid: string) {
+	try {
+		await fs.unlink(join(passDir, `${uid}.hash`));
+	} catch (error) {
+		return new Error(error.message);
+	}
+}

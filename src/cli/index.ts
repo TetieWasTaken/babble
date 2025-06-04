@@ -1,10 +1,17 @@
-import { select, search, input } from '@inquirer/prompts';
+import { select, search, input, password } from '@inquirer/prompts';
 import fetch, { type Response } from 'node-fetch';
 import { distance } from 'fastest-levenshtein';
 import { Method } from '../server/routes.js';
 import { startRepl } from './repl.js';
 import { startInquiry } from './inquiry.js';
 import { encryptPassword } from './auth.js';
+import logger from '../linker/logger.js';
+
+enum ActionSelection {
+	NEW,
+	EXISTING,
+	DESTROY,
+}
 
 export type RequestResult = {
 	status: string;
@@ -82,16 +89,22 @@ export async function startCli(): Promise<'exit' | undefined> {
 
 	const uidList = (await uidResponse.json()) as RequestResult;
 
-	const isExisting = await select({
+	const action = await select({
 		message: 'Use an existing database, or choose a new one:',
 		choices: [
 			{
 				name: 'existing',
-				value: true,
+				value: ActionSelection.EXISTING,
 				description: 'Choose an existing database',
 				disabled: (uidList.data.uids?.length ?? 0) === 0 ? '(no database was found)' : false,
 			},
-			{ name: 'new', value: false, description: 'Create a new database' },
+			{ name: 'new', value: ActionSelection.NEW, description: 'Create a new database' },
+			{
+				name: 'destroy',
+				value: ActionSelection.DESTROY,
+				description: 'Remove an existing database',
+				disabled: (uidList.data.uids?.length ?? 0) === 0 ? '(no database was found)' : false,
+			},
 		],
 		instructions,
 		theme,
@@ -99,8 +112,31 @@ export async function startCli(): Promise<'exit' | undefined> {
 
 	let uid: string;
 
-	if (isExisting) {
-		// Use an existing database
+	if (action === ActionSelection.NEW) {
+		// Create a new database
+
+		const newUid = await input({ message: 'New database uid:' });
+		let enteredPassword = await password({ message: 'Enter authentication password, if any:', mask: true });
+
+		let encrypted: string | null = null;
+
+		if (enteredPassword !== null) {
+			encrypted = await encryptPassword(enteredPassword);
+		}
+
+		const result = await sendRequest(`new/${newUid}`, Method.POST, { password: encrypted });
+		if (!result.ok) {
+			logger.error(result);
+			console.error(result);
+			return;
+		}
+
+		selectedPassword = encrypted;
+
+		const jsonResult = (await result.json()) as RequestResult;
+		uid = jsonResult.data.key;
+	} else {
+		// Use an existing database or destroy one
 
 		uid = await search({
 			message: 'Database uid:',
@@ -110,32 +146,27 @@ export async function startCli(): Promise<'exit' | undefined> {
 			theme,
 		});
 
-		const password = await input({ message: 'Enter authentication password, if any:' });
-		if (password !== null) {
-			selectedPassword = await encryptPassword(password);
-		}
-	} else {
-		// Create a new database
-
-		const newUid = await input({ message: 'New database uid:' });
-		let password = await input({ message: 'Enter authentication password, if any:' });
-
-		let encrypted: string | null = null;
-
-		if (password !== null) {
-			encrypted = await encryptPassword(password);
+		const enteredPassword = await password({ message: 'Enter authentication password, if any:', mask: true });
+		if (enteredPassword !== null) {
+			selectedPassword = await encryptPassword(enteredPassword);
 		}
 
-		const result = await sendRequest(`new/${newUid}`, Method.POST, { password: encrypted });
-		if (!result.ok) {
-			console.error(result);
+		if (action === ActionSelection.DESTROY) {
+			const confirmation = await input({
+				message: "Type 'confirm' to delete the database or anything else to exit.",
+			});
+
+			if (confirmation === 'confirm') {
+				const result = await sendRequest(`delete/${uid}`, Method.DELETE, { password: selectedPassword });
+				if (!result.ok) {
+					logger.error(result);
+					console.error(result);
+					return;
+				}
+			}
+
 			return;
 		}
-
-		selectedPassword = encrypted;
-
-		const jsonResult = (await result.json()) as RequestResult;
-		uid = jsonResult.data.key;
 	}
 
 	const useRepl = await select({
