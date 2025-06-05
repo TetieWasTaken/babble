@@ -115,7 +115,11 @@ export async function startCli(): Promise<'exit' | undefined> {
 	if (action === ActionSelection.NEW) {
 		// Create a new database
 
-		const newUid = await input({ message: 'New database uid:' });
+		let newUid = '';
+		while (newUid.length === 0) {
+			newUid = await input({ message: 'New database uid:' });
+		}
+
 		let enteredPassword = await password({ message: 'Enter authentication password, if any:', mask: true });
 
 		let encrypted: string | null = null;
