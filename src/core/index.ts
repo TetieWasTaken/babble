@@ -214,12 +214,13 @@ export async function deleteData(uid: string) {
 	try {
 		const dataFile = path.resolve(dataFolder, `${uid}.json`);
 		const data = fetch('.', uid);
-		fs.unlink(dataFile);
+		await fs.unlink(dataFile);
 
 		return data;
 	} catch (error) {
 		logger.error(error);
-		throw new Error(error);
+		const error_ = error.message ? new Error(error) : new Error('Unknown error');
+		throw error_;
 	}
 }
 
@@ -310,5 +311,5 @@ export async function fetchAll(uid: string): Promise<Record<string, unknown>> {
  * @returns the written data
  */
 export async function writeAll(uid: string, content: Record<string, unknown>): Promise<Record<string, unknown>> {
-	return await _write(content, uid);
+	return _write(content, uid);
 }

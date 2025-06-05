@@ -2,10 +2,10 @@ import { select, search, input, password } from '@inquirer/prompts';
 import fetch, { type Response } from 'node-fetch';
 import { distance } from 'fastest-levenshtein';
 import { Method } from '../server/routes.js';
+import logger from '../linker/logger.js';
 import { startRepl } from './repl.js';
 import { startInquiry } from './inquiry.js';
 import { encryptPassword } from './auth.js';
-import logger from '../linker/logger.js';
 
 enum ActionSelection {
 	NEW,
@@ -42,7 +42,7 @@ export function getAutocomplete(input: string | undefined, options: string[]) {
 		.map((item) => item.key);
 }
 
-let selectedPassword: string | null = null;
+let selectedPassword: string | undefined;
 
 /**
  * Sends an HTTP request to the babble server
@@ -117,15 +117,15 @@ export async function startCli(): Promise<'exit' | undefined> {
 
 		const newUid = await input({
 			message: 'New database uid:',
-			validate: (input: string) => {
+			validate(input: string) {
 				if (input.length === 0) return false;
 				return true;
 			},
 		});
 
-		let enteredPassword = await password({ message: 'Enter authentication password, if any:', mask: true });
+		const enteredPassword = await password({ message: 'Enter authentication password, if any:', mask: true });
 
-		let encrypted: string | null = null;
+		let encrypted: string | undefined;
 
 		if (enteredPassword !== null) {
 			encrypted = await encryptPassword(enteredPassword);
@@ -192,6 +192,6 @@ export async function startCli(): Promise<'exit' | undefined> {
 		theme,
 	});
 
-	if (useRepl) return await startRepl(uid);
-	else return await startInquiry(uid);
+	if (useRepl) return startRepl(uid);
+	return startInquiry(uid);
 }

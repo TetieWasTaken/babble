@@ -5,12 +5,12 @@
  */
 
 import process from 'node:process';
+import { type FastifyInstance } from 'fastify';
 import { startServer } from '../server/index.js';
 import { startCli } from '../cli/index.js';
 import { job } from '../core/index.js';
 import logger from './logger.js';
 import { Argtype, startCommander } from './arguments.js';
-import { FastifyInstance } from 'fastify';
 
 export { add, fetch, modify, remove, getUids, createNew, fetchAll } from '../core/index.js';
 
@@ -25,7 +25,7 @@ const shutdown = async () => {
 
 logger.warn('Starting commander');
 const commanderResult = await startCommander();
-if (commanderResult == Argtype.EXIT) {
+if (commanderResult === Argtype.EXIT) {
 	await shutdown();
 	process.exit(0);
 }
@@ -61,5 +61,5 @@ if (commanderResult !== Argtype.SERVER) {
 		throw new Error(String(error));
 	});
 
-	shutdown();
+	await shutdown();
 }

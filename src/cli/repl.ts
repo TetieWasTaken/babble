@@ -1,6 +1,6 @@
 import readline from 'node:readline';
-import fetch, { type Response } from 'node-fetch';
-import { RequestResult, sendRequest } from './index.js';
+import process from 'node:process';
+import { type RequestResult, sendRequest } from './index.js';
 
 enum Method {
 	GET = 'GET',
@@ -43,11 +43,12 @@ export async function startRepl(uid: string): Promise<'exit' | undefined> {
 			try {
 				switch (cmd) {
 					case 'exit':
-					case 'quit':
+					case 'quit': {
 						rl.close();
 						return;
+					}
 
-					case 'help':
+					case 'help': {
 						console.log(`
 Available commands:
   • add <key> <JSON>      — create
@@ -57,54 +58,63 @@ Available commands:
   • exit|quit             — exit REPL
 `);
 						break;
+					}
 
 					case 'add':
-					case 'modify':
+					case 'modify': {
 						if (!key || rest.length === 0) {
 							console.log(`Usage: ${cmd} <key> <JSON>`);
 							break;
 						}
+
 						const jsonBody = rest.join(' ');
 						let body: Record<string, unknown>;
 						try {
-							body = JSON.parse(jsonBody);
+							body = JSON.parse(jsonBody) as Record<string, unknown>;
 						} catch {
 							console.error('❌ Invalid JSON');
 							break;
 						}
+
 						{
-							const res = await sendRequest(`${uid}/${cmd}/${key}`, methodMap[cmd], body);
-							if (res.ok) {
-								const j = (await res.json()) as RequestResult;
-								console.log('✅', j.data.document);
+							const result = await sendRequest(`${uid}/${cmd}/${key}`, methodMap[cmd], body);
+							if (result.ok) {
+								const index = (await result.json()) as RequestResult;
+								console.log('✅', index.data.document);
 							} else {
-								console.error('❌', res.status, await res.text());
+								console.error('❌', result.status, await result.text());
 							}
 						}
+
 						break;
+					}
 
 					case 'fetch':
-					case 'remove':
+					case 'remove': {
 						if (!key) {
 							console.log(`Usage: ${cmd} <key>`);
 							break;
 						}
+
 						{
-							const res = await sendRequest(`${uid}/${cmd}/${key}`, methodMap[cmd]);
-							if (res.ok) {
-								const j = (await res.json()) as RequestResult;
-								console.log(cmd === 'remove' ? `✅ ${j.data.key} removed` : j.data.document);
+							const result = await sendRequest(`${uid}/${cmd}/${key}`, methodMap[cmd]);
+							if (result.ok) {
+								const index = (await result.json()) as RequestResult;
+								console.log(cmd === 'remove' ? `✅ ${index.data.key} removed` : index.data.document);
 							} else {
-								console.error('❌', res.status, await res.text());
+								console.error('❌', result.status, await result.text());
 							}
 						}
-						break;
 
-					default:
+						break;
+					}
+
+					default: {
 						console.log(`Unknown command “${cmd}”. Type “help”.`);
+					}
 				}
-			} catch (err) {
-				console.error('❌ Error:', err);
+			} catch (error) {
+				console.error('❌ Error:', error);
 			}
 
 			rl.prompt();

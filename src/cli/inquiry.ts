@@ -1,7 +1,7 @@
 import { select, editor, search, input, Separator } from '@inquirer/prompts';
 import { getAllKeyPaths } from '../core/index.js';
-import { getAutocomplete, type RequestResult, sendRequest } from './index.js';
 import { Method } from '../server/routes.js';
+import { getAutocomplete, type RequestResult, sendRequest } from './index.js';
 
 type Action = {
 	action: 'add' | 'fetch' | 'modify' | 'remove';

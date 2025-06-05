@@ -1,12 +1,12 @@
-import fetch from 'node-fetch';
-import { RequestResult } from './index.js';
 import { constants, publicEncrypt } from 'node:crypto';
+import fetch from 'node-fetch';
+import { type RequestResult } from './index.js';
 
 export async function encryptPassword(password: string): Promise<string> {
-	const res = await fetch('http://localhost:6363/server/pubkey');
+	const result = await fetch('http://localhost:6363/server/pubkey');
 	const {
 		data: { key: pubPem },
-	} = (await res.json()) as RequestResult;
+	} = (await result.json()) as RequestResult;
 
 	const ciphertext = publicEncrypt(
 		{
