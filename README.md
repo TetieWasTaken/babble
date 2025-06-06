@@ -36,7 +36,17 @@ Select `new` to create a new database, then select the REPL CLI (advanced) or th
 
 ## Endpoints
 
-- `POST /server/add/` - Adds an item
-- `GET /server/fetch/` - Fetches an item
-- `PATCH /server/modify` - Modifies an item
-- `DELETE /server/remove` - Removes an item
+- `POST /server/:uid/add/*` - Adds an item
+- `GET /server/:uid/fetch/*` - Fetches an item
+- `PATCH /server/:uid/modify/*` - Modifies an item
+- `DELETE /server/:uid/remove/*` - Removes an item
+- `GET /server/:uid/export` - Exports a database
+- `POST /server/:uid/import` - Imports a database
+
+- `GET /server/uid` - Get every avalailable UID
+- `POST /server/new/:uid` - Creates a new database
+- `DELETE /server/delete/:uid` - Deletes a database
+
+- `GET /server/pubkey` - Retrieves the public key
+
+###### \* wildcard is a slash-delimited key path
