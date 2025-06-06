@@ -4,19 +4,41 @@
 	"version": "1.0.0",
 	"main": "src/index.ts",
 	"repository": "https://github.com/TetieWasTaken/babble",
+	"bin": "index.cjs",
 	"scripts": {
 		"build": "tsc",
 		"start": "node dist/linker/index.js",
 		"dev": "yarn run build && yarn run start",
 		"lint": "xo . --fix --prettier=true",
-		"format": "prettier . --write"
+		"format": "prettier . --write",
+		"bundle": "node --loader ts-node/esm ./scripts/rollup-build.mjs",
+		"postbundle": "chmod +x dist/bundle.js",
+		"make-exe-nexe": "npx nexe dist/bundle.js --target linux-x64-18.15.0 --output babble",
+		"make-exe-pkg": "pkg ."
+	},
+	"pkg": {
+		"assets": [
+			"dist/bundle.js"
+		],
+		"targets": [
+			"node18-linux-x64",
+			"node18-macos-x64",
+			"node18-win-x64"
+		],
+		"outputPath": "release"
 	},
 	"author": "TetieWasTaken",
 	"license": "Unlicense",
 	"private": false,
 	"devDependencies": {
+		"@rollup/plugin-commonjs": "^28.0.3",
+		"@rollup/plugin-json": "^6.1.0",
+		"@rollup/plugin-node-resolve": "^16.0.1",
 		"@types/node": "^22.15.18",
+		"esbuild": "^0.25.5",
 		"prettier": "^3.5.3",
+		"rollup": "^4.41.1",
+		"ts-node": "^10.9.2",
 		"typescript": "^5.8.3",
 		"xo": "^0.60.0"
 	},
