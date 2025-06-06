@@ -2,6 +2,10 @@
 
 Babble is a document-oriented database tailored for easy local development and production.
 
+![Preview](./media/main.gif 'Preview')
+
+###### Babble preview
+
 # How to run
 
 Clone the repo or download the source code from [the releases](https://github.com/TetieWasTaken/babble/releases):
