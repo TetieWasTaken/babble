@@ -10,7 +10,7 @@ import process from 'node:process';
 import writeFileAtomic from 'write-file-atomic';
 import { CronJob } from 'cron';
 import logger from '../linker/logger.js';
-import { createCopy } from './backup.js';
+import { createCopy, deleteCopies } from './backup.js';
 
 export const job = CronJob.from({
 	cronTime: '0 */6 * * *',
@@ -215,6 +215,7 @@ export async function deleteData(uid: string) {
 		const dataFile = path.resolve(dataFolder, `${uid}.json`);
 		const data = fetch('.', uid);
 		await fs.unlink(dataFile);
+		await deleteCopies(uid);
 
 		return data;
 	} catch (error) {

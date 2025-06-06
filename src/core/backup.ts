@@ -60,3 +60,9 @@ export async function createCopy(uid: string) {
 	const database = await fetchAll(uid);
 	await _write(database, uid);
 }
+
+export async function deleteCopies(uid: string) {
+	const backupPath = path.resolve(backupFolder, uid);
+
+	await fs.rm(backupPath, { recursive: true, force: true });
+}
