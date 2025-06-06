@@ -263,6 +263,11 @@ export async function getUids(): Promise<string[]> {
 	const uids: string[] = [];
 
 	try {
+		if (!existsSync(dataFolder)) {
+			mkdirSync(dataFolder, { recursive: true });
+			logger.info(`Created directory: ${dataFolder}`);
+		}
+
 		const files = await fs.readdir(dataFolder);
 
 		for (const file of files) {
