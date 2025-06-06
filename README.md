@@ -36,6 +36,8 @@ Select `new` to create a new database, then select the REPL CLI (advanced) or th
 
 ## Endpoints
 
+##### Data management
+
 - `POST /server/:uid/add/*` - Adds an item
 - `GET /server/:uid/fetch/*` - Fetches an item
 - `PATCH /server/:uid/modify/*` - Modifies an item
@@ -43,9 +45,13 @@ Select `new` to create a new database, then select the REPL CLI (advanced) or th
 - `GET /server/:uid/export` - Exports a database
 - `POST /server/:uid/import` - Imports a database
 
+##### Database management
+
 - `GET /server/uid` - Get every avalailable UID
 - `POST /server/new/:uid` - Creates a new database
 - `DELETE /server/delete/:uid` - Deletes a database
+
+##### Authentication
 
 - `GET /server/pubkey` - Retrieves the public key
 
