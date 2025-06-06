@@ -6,6 +6,14 @@ Babble is a document-oriented database tailored for easy local development and p
 
 ###### Babble preview
 
+# Features:
+
+- Password authentication\*
+- REPL and interactive CLI for ease of use
+- Server-only mode (for interacting with the _core_ directly)
+
+###### \*Data is **NOT** encrypted locally. Authentication only protects http server.
+
 # How to run
 
 Clone the repo or download the source code from [the releases](https://github.com/TetieWasTaken/babble/releases):
